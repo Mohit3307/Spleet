@@ -1,20 +1,14 @@
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace Spleet.Models
 {
-    public class User
+    public class User : IdentityUser<Guid>
     {
-        [Key]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        
 
         [Required, MaxLength(100)]
-        public string FullName { get; set; } = "";
-
-        [Required, MaxLength(255), EmailAddress]
-        public string Email { get; set; } = "";
-
-        [Required]
-        public string PasswordHash { get; set; } = "";
+        public string FullName { get; set; } = string.Empty;
 
         public string? AvatarUrl { get; set; }
 

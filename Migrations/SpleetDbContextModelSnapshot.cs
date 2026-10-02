@@ -159,9 +159,6 @@ namespace Spleet.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("ActorId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("ActorUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -184,7 +181,7 @@ namespace Spleet.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ActorId");
+                    b.HasIndex("ActorUserId");
 
                     b.HasIndex("GroupId");
 
@@ -274,9 +271,6 @@ namespace Spleet.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -303,8 +297,6 @@ namespace Spleet.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedById");
 
                     b.ToTable("Groups");
                 });
@@ -396,9 +388,6 @@ namespace Spleet.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -420,8 +409,6 @@ namespace Spleet.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedById");
 
                     b.HasIndex("GroupId");
 
@@ -608,7 +595,9 @@ namespace Spleet.Migrations
                 {
                     b.HasOne("Spleet.Models.User", "Actor")
                         .WithMany()
-                        .HasForeignKey("ActorId");
+                        .HasForeignKey("ActorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Spleet.Models.Group", "Group")
                         .WithMany("ActivityLog")
@@ -659,15 +648,6 @@ namespace Spleet.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Spleet.Models.Group", b =>
-                {
-                    b.HasOne("Spleet.Models.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById");
-
-                    b.Navigation("CreatedBy");
-                });
-
             modelBuilder.Entity("Spleet.Models.GroupInvite", b =>
                 {
                     b.HasOne("Spleet.Models.Group", "Group")
@@ -700,17 +680,11 @@ namespace Spleet.Migrations
 
             modelBuilder.Entity("Spleet.Models.RecurringExpenseTemplate", b =>
                 {
-                    b.HasOne("Spleet.Models.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById");
-
                     b.HasOne("Spleet.Models.Group", "Group")
                         .WithMany()
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("CreatedBy");
 
                     b.Navigation("Group");
                 });

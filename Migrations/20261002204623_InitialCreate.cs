@@ -54,6 +54,24 @@ namespace Spleet.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Groups",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
+                    GroupType = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Groups", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -160,30 +178,6 @@ namespace Spleet.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Groups",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: true),
-                    GroupType = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedById = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsArchived = table.Column<bool>(type: "bit", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "nvarchar(3)", maxLength: 3, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Groups", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Groups_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ActivityLogEntries",
                 columns: table => new
                 {
@@ -191,7 +185,6 @@ namespace Spleet.Migrations
                     GroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
                     ActorUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ActorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Summary = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                     RelatedEntityId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -200,10 +193,11 @@ namespace Spleet.Migrations
                 {
                     table.PrimaryKey("PK_ActivityLogEntries", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ActivityLogEntries_AspNetUsers_ActorId",
-                        column: x => x.ActorId,
+                        name: "FK_ActivityLogEntries_AspNetUsers_ActorUserId",
+                        column: x => x.ActorUserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ActivityLogEntries_Groups_GroupId",
                         column: x => x.GroupId,
@@ -305,7 +299,6 @@ namespace Spleet.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     GroupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedByUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedById = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Description = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
                     DefaultAmount = table.Column<decimal>(type: "decimal(12,2)", nullable: false),
                     Category = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
@@ -316,11 +309,6 @@ namespace Spleet.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RecurringExpenseTemplates", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RecurringExpenseTemplates_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_RecurringExpenseTemplates_Groups_GroupId",
                         column: x => x.GroupId,
@@ -395,9 +383,9 @@ namespace Spleet.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ActivityLogEntries_ActorId",
+                name: "IX_ActivityLogEntries_ActorUserId",
                 table: "ActivityLogEntries",
-                column: "ActorId");
+                column: "ActorUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ActivityLogEntries_GroupId",
@@ -487,16 +475,6 @@ namespace Spleet.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Groups_CreatedById",
-                table: "Groups",
-                column: "CreatedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RecurringExpenseTemplates_CreatedById",
-                table: "RecurringExpenseTemplates",
-                column: "CreatedById");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_RecurringExpenseTemplates_GroupId",
                 table: "RecurringExpenseTemplates",
                 column: "GroupId");
@@ -560,10 +538,10 @@ namespace Spleet.Migrations
                 name: "Expenses");
 
             migrationBuilder.DropTable(
-                name: "Groups");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "Groups");
         }
     }
 }

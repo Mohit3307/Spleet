@@ -1,0 +1,48 @@
+@using Spleet.Models
+@model Settlement
+@{
+    ViewData["Title"] = "Settlement";
+}
+<div class="container mt-4">
+    <div class="mb-4">
+        <h1>Settlement</h1>
+        <p class="text-muted">@(Model.Payer?.FullName ?? Model.Payer?.UserName ?? "User") → @(Model.Payee?.FullName ?? Model.Payee?.UserName ?? "User")</p>
+    </div>
+
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2>@Model.Amount.ToString("0.00")</h2>
+            <p><strong>Status:</strong> @Model.Status</p>
+            <p><strong>Created:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+            @if (Model.AutoConfirmDeadline.HasValue && Model.Status == SettlementStatus.Pending)
+            {
+                <p><strong>Auto-confirm:</strong> @Model.AutoConfirmDeadline.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Note))
+            {
+                <p><strong>Note:</strong> @Model.Note</p>
+            }
+        </div>
+    </div>
+
+    @if (Model.Status == SettlementStatus.Pending)
+    {
+        <div class="d-flex gap-2">
+            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-success" type="submit">Confirm Payment</button>
+            </form>
+            <form asp-action="Dispute" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button class="btn btn-outline-danger" type="submit">Dispute</button>
+            </form>
+        </div>
+    }
+
+    <a asp-action="Index" asp-route-groupId="@Model.GroupId" class="btn btn-link mt-3">Back to Settle Up</a>
+</div>

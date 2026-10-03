@@ -5,8 +5,6 @@ namespace Spleet.Models
 {
     public class User : IdentityUser<Guid>
     {
-        
-
         [Required, MaxLength(100)]
         public string FullName { get; set; } = string.Empty;
 

@@ -1,8 +1,77 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model IEnumerable<Spleet.Models.Group>
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var user = ViewBag.User as Spleet.Models.User;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="dashboard-hero">
+    <div>
+        <p class="eyebrow">Dashboard</p>
+        <h1>Welcome back, @(user?.FullName ?? "there")</h1>
+        <p class="page-subtitle">Keep your group expenses simple and organised.</p>
+    </div>
+
+    <a asp-controller="Groups" asp-action="Create" class="primary-button">
+        + Create group
+    </a>
+</section>
+
+<section class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-label">Your groups</span>
+        <strong>@Model.Count()</strong>
+        <span class="stat-note">Active groups</span>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-label">Expenses</span>
+        <strong>—</strong>
+        <span class="stat-note">Coming from your groups</span>
+    </div>
+
+    <div class="stat-card">
+        <span class="stat-label">Balance</span>
+        <strong>—</strong>
+        <span class="stat-note">Calculated in Settle Up</span>
+    </div>
+</section>
+
+<section class="section-block">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Your groups</p>
+            <h2>Groups</h2>
+        </div>
+        <a asp-controller="Groups" asp-action="Index" class="text-link">View all</a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="group-grid">
+            @foreach (var group in Model)
+            {
+                <a asp-controller="Groups"
+                   asp-action="Details"
+                   asp-route-id="@group.Id"
+                   class="group-card">
+                    <div class="group-icon">G</div>
+                    <div class="group-card-body">
+                        <h3>@group.Name</h3>
+                        <p>@(string.IsNullOrWhiteSpace(group.Description) ? "No description" : group.Description)</p>
+                    </div>
+                    <span class="group-arrow">→</span>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-card">
+            <div class="empty-icon">+</div>
+            <h3>Create your first group</h3>
+            <p>Start a group for roommates, friends, a trip, or anything you split together.</p>
+            <a asp-controller="Groups" asp-action="Create" class="primary-button">Create group</a>
+        </div>
+    }
+</section>

@@ -1,0 +1,14 @@
+@page
+@model Spleet.Areas.Identity.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Log out";
+}
+
+<div class="text-center mt-5">
+    <h1>Log out</h1>
+    <p>Are you sure you want to log out?</p>
+    <form method="post">
+        <button type="submit" class="btn btn-danger">Log out</button>
+        <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

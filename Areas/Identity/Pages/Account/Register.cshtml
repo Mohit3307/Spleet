@@ -1,0 +1,53 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Create account";
+    Layout = "/Areas/Identity/Pages/Shared/_AuthLayout.cshtml";
+}
+
+<div class="auth-card">
+    <div class="auth-heading">
+        <p class="eyebrow">Get started</p>
+        <h1>Create your Spleet account</h1>
+        <p>Start sharing expenses with roommates, friends and travel groups.</p>
+    </div>
+
+    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="auth-form">
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+
+        <div class="field">
+            <label asp-for="Input.FullName">Full name</label>
+            <input asp-for="Input.FullName" autocomplete="name" placeholder="Your name" />
+            <span asp-validation-for="Input.FullName" class="field-error"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Input.Email">Email</label>
+            <input asp-for="Input.Email" autocomplete="username" placeholder="you@example.com" />
+            <span asp-validation-for="Input.Email" class="field-error"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Input.Password">Password</label>
+            <input asp-for="Input.Password" autocomplete="new-password" placeholder="At least 6 characters" />
+            <span asp-validation-for="Input.Password" class="field-error"></span>
+        </div>
+
+        <div class="field">
+            <label asp-for="Input.ConfirmPassword">Confirm password</label>
+            <input asp-for="Input.ConfirmPassword" autocomplete="new-password" placeholder="Enter your password again" />
+            <span asp-validation-for="Input.ConfirmPassword" class="field-error"></span>
+        </div>
+
+        <button id="registerSubmit" type="submit" class="auth-button">Create account</button>
+    </form>
+
+    <div class="auth-switch">
+        Already have an account?
+        <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

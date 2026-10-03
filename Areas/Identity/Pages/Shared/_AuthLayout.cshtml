@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Spleet</title>
+    <meta name="description" content="Spleet - simple expense sharing for groups." />
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <a class="auth-brand" asp-controller="Home" asp-action="Index">
+            <span class="brand-mark">S</span>
+            <span>Spleet</span>
+        </a>
+
+        @RenderBody()
+
+        <footer class="auth-footer">
+            © @DateTime.Now.Year Spleet
+        </footer>
+    </main>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

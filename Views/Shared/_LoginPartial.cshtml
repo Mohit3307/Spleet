@@ -1,0 +1,27 @@
+@using Microsoft.AspNetCore.Identity
+@using Spleet.Models
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    <div class="user-menu">
+        <span class="user-avatar">
+            @(currentUser?.FullName?.Length > 0 ? currentUser.FullName.Substring(0, 1).ToUpper() : "U")
+        </span>
+        <span class="user-name">@currentUser?.FullName</span>
+
+        <form asp-area="Identity"
+              asp-page="/Account/Logout"
+              asp-route-returnUrl="@Url.Action("Index", "Home")"
+              method="post">
+            <button type="submit" class="nav-logout">Log out</button>
+        </form>
+    </div>
+}
+else
+{
+    <a class="nav-login" asp-area="Identity" asp-page="/Account/Login">Log in</a>
+}

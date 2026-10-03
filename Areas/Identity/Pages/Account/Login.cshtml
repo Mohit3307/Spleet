@@ -1,0 +1,49 @@
+@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Log in";
+    Layout = "/Areas/Identity/Pages/Shared/_AuthLayout.cshtml";
+}
+
+<div class="auth-card">
+    <div class="auth-heading">
+        <p class="eyebrow">Welcome back</p>
+        <h1>Log in to Spleet</h1>
+        <p>Keep your shared expenses organised and your group balances clear.</p>
+    </div>
+
+    <form id="account" method="post" class="auth-form">
+        <div asp-validation-summary="ModelOnly" class="validation-summary" role="alert"></div>
+
+        <div class="field">
+            <label asp-for="Input.Email">Email</label>
+            <input asp-for="Input.Email" autocomplete="username" placeholder="you@example.com" />
+            <span asp-validation-for="Input.Email" class="field-error"></span>
+        </div>
+
+        <div class="field">
+            <div class="field-label-row">
+                <label asp-for="Input.Password">Password</label>
+                <a asp-page="./ForgotPassword">Forgot password?</a>
+            </div>
+            <input asp-for="Input.Password" autocomplete="current-password" placeholder="Enter your password" />
+            <span asp-validation-for="Input.Password" class="field-error"></span>
+        </div>
+
+        <div class="remember-row">
+            <input asp-for="Input.RememberMe" />
+            <label asp-for="Input.RememberMe">Remember me</label>
+        </div>
+
+        <button id="login-submit" type="submit" class="auth-button">Log in</button>
+    </form>
+
+    <div class="auth-switch">
+        New to Spleet?
+        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

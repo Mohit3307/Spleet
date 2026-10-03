@@ -1,24 +1,31 @@
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Spleet.Models;
+using Spleet.Repositories.Interfaces;
 
-namespace Spleet.Controllers;
-
-public class HomeController : Controller
+namespace Spleet.Controllers
 {
-    public IActionResult Index()
+    [Authorize]
+    public class HomeController : Controller
     {
-        return View();
-    }
+        private readonly UserManager<User> _userManager;
+        private readonly IGroupRepository _groupRepository;
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        public HomeController(UserManager<User> userManager, IGroupRepository groupRepository)
+        {
+            _userManager = userManager;
+            _groupRepository = groupRepository;
+        }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        public async Task<IActionResult> Index()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            var groups = await _groupRepository.GetGroupsForUserAsync(user.Id);
+            ViewBag.User = user;
+            return View(groups);
+        }
     }
 }

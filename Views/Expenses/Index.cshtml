@@ -1,0 +1,39 @@
+@using Spleet.Models
+@model List<Expense>
+@{
+    var group = (Group)ViewBag.Group;
+    ViewData["Title"] = "Expenses - " + group.Name;
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Expenses</h1>
+            <p class="text-muted mb-0">@group.Name</p>
+        </div>
+        <div>
+            <a asp-controller="Groups" asp-action="Details" asp-route-id="@group.Id" class="btn btn-outline-secondary">Group</a>
+            <a asp-action="Create" asp-route-groupId="@group.Id" class="btn btn-primary">+ Add Expense</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No expenses have been added yet.</div>
+    }
+    else
+    {
+        <div class="list-group shadow-sm">
+            @foreach (var expense in Model)
+            {
+                <a asp-action="Details" asp-route-id="@expense.Id"
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@expense.Description</strong>
+                        <div class="small text-muted">@expense.Category · @expense.ExpenseDate.ToLocalTime().ToString("dd MMM yyyy")</div>
+                    </div>
+                    <strong>@group.CurrencyCode @expense.Amount.ToString("0.00")</strong>
+                </a>
+            }
+        </div>
+    }
+</div>

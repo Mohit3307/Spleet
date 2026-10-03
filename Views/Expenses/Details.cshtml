@@ -1,0 +1,46 @@
+@using Spleet.Models
+@model Expense
+@{
+    ViewData["Title"] = Model.Description;
+}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1>@Model.Description</h1>
+            <p class="text-muted">@Model.Category · @Model.ExpenseDate.ToLocalTime().ToString("dd MMM yyyy")</p>
+        </div>
+        <div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Edit</a>
+            <a asp-action="Index" asp-route-groupId="@Model.GroupId" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="mb-3">@Model.Amount.ToString("0.00")</h2>
+            <p class="mb-1"><strong>Split:</strong> @Model.SplitType</p>
+            <p class="mb-0"><strong>Paid by:</strong> @(Model.PaidBy?.FullName ?? Model.PaidBy?.UserName ?? "Unknown")</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header"><h5 class="mb-0">Shares</h5></div>
+        <div class="list-group list-group-flush">
+            @foreach (var split in Model.Splits)
+            {
+                <div class="list-group-item d-flex justify-content-between">
+                    <span>@(split.User?.FullName ?? split.User?.UserName ?? "Unknown")</span>
+                    <strong>@split.ShareAmount.ToString("0.00")</strong>
+                </div>
+            }
+        </div>
+    </div>
+
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="mt-3">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-outline-danger"
+                onclick="return confirm('Delete this expense? It will be soft-deleted.');">
+            Delete Expense
+        </button>
+    </form>
+</div>

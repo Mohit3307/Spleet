@@ -1,0 +1,42 @@
+@model List<Spleet.Models.Group>
+
+@{
+    ViewData["Title"] = "My Groups";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>My Groups</h1>
+            <p class="text-muted">Groups you currently belong to.</p>
+        </div>
+        <a asp-action="Create" class="btn btn-primary">+ Create Group</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">You are not part of any groups yet.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var group in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">@group.Name</h5>
+                            <p class="card-text text-muted">
+                                @(string.IsNullOrWhiteSpace(group.Description) ? "No description" : group.Description)
+                            </p>
+                            <span class="badge bg-secondary">@group.CurrencyCode</span>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a asp-action="Details" asp-route-id="@group.Id" class="btn btn-outline-primary">Open Group</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

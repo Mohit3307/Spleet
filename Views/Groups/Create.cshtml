@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Create Group";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <h1>Create Group</h1>
+            <p class="text-muted">Create a group for roommates, friends, trips, or shared expenses.</p>
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Group name</label>
+                    <input type="text" id="name" name="name" class="form-control" maxlength="100" placeholder="e.g. Hostel Roommates" required />
+                    @Html.ValidationMessage("name", "", new { @class = "text-danger" })
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-control" maxlength="300" rows="3" placeholder="Optional description"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="groupType" class="form-label">Group type</label>
+                    <input type="text" id="groupType" name="groupType" class="form-control" maxlength="30" placeholder="e.g. Roommates" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="currencyCode" class="form-label">Currency</label>
+                    <select id="currencyCode" name="currencyCode" class="form-select">
+                        <option value="INR">INR - Indian Rupee</option>
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Create Group</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

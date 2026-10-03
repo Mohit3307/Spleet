@@ -1,0 +1,282 @@
+@using Spleet.Models
+@model Group
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    var recentExpenses =
+        ViewBag.RecentExpenses as IEnumerable<Expense>
+        ?? Enumerable.Empty<Expense>();
+}
+
+<div class="container mt-4">
+
+    <!-- Group Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1>@Model.Name</h1>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <p class="text-muted">@Model.Description</p>
+            }
+
+            <span class="badge bg-secondary">
+                @Model.CurrencyCode
+            </span>
+
+            @if (!string.IsNullOrWhiteSpace(Model.GroupType))
+            {
+                <span class="badge bg-light text-dark border ms-1">
+                    @Model.GroupType
+                </span>
+            }
+        </div>
+
+        <a asp-action="Index"
+           class="btn btn-outline-secondary">
+            Back to Groups
+        </a>
+    </div>
+
+
+    <div class="row">
+
+        <!-- Main Content -->
+        <div class="col-md-8">
+
+            <!-- Members -->
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header">
+                    <h5 class="mb-0">Members</h5>
+                </div>
+
+                <div class="card-body">
+
+                    @if (!Model.Members.Any())
+                    {
+                        <p class="text-muted mb-0">
+                            No members found.
+                        </p>
+                    }
+                    else
+                    {
+                        <div class="list-group">
+
+                            @foreach (var member in Model.Members)
+                            {
+                                <div class="list-group-item
+                                            d-flex
+                                            justify-content-between
+                                            align-items-center">
+
+                                    <div>
+                                        <strong>
+                                            @(member.User?.FullName
+                                                ?? member.User?.UserName
+                                                ?? "Unknown user")
+                                        </strong>
+
+                                        <div class="text-muted small">
+                                            @member.User?.Email
+                                        </div>
+                                    </div>
+
+                                    <span class="badge
+                                        @(member.Role == GroupRole.Admin
+                                            ? "bg-primary"
+                                            : "bg-secondary")">
+
+                                        @member.Role
+
+                                    </span>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+
+            <!-- Recent Expenses -->
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header
+                            d-flex
+                            justify-content-between
+                            align-items-center">
+
+                    <h5 class="mb-0">
+                        Recent Expenses
+                    </h5>
+
+                    <a asp-controller="Expenses"
+                       asp-action="Index"
+                       asp-route-groupId="@Model.Id"
+                       class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+
+                </div>
+
+                <div class="card-body p-0">
+
+                    @if (!recentExpenses.Any())
+                    {
+                        <div class="p-4 text-center">
+
+                            <p class="text-muted mb-3">
+                                No expenses have been added yet.
+                            </p>
+
+                            <a asp-controller="Expenses"
+                               asp-action="Create"
+                               asp-route-groupId="@Model.Id"
+                               class="btn btn-primary">
+                                + Add First Expense
+                            </a>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="list-group list-group-flush">
+
+                            @foreach (var expense in recentExpenses)
+                            {
+                                <a asp-controller="Expenses"
+                                   asp-action="Details"
+                                   asp-route-id="@expense.Id"
+                                   class="list-group-item
+                                          list-group-item-action">
+
+                                    <div class="d-flex
+                                                justify-content-between
+                                                align-items-center">
+
+                                        <div>
+
+                                            <strong>
+                                                @expense.Description
+                                            </strong>
+
+                                            <div class="small text-muted">
+
+                                                Paid by
+                                                @(expense.PaidBy?.FullName
+                                                    ?? expense.PaidBy?.UserName
+                                                    ?? "Unknown")
+
+                                                ·
+
+                                                @expense.ExpenseDate
+                                                    .ToLocalTime()
+                                                    .ToString("dd MMM yyyy")
+
+                                            </div>
+
+                                        </div>
+
+                                        <div class="text-end">
+
+                                            <strong>
+                                                @Model.CurrencyCode
+                                                @expense.Amount.ToString("0.00")
+                                            </strong>
+
+                                            <div>
+                                                <span class="badge
+                                                    bg-light
+                                                    text-dark
+                                                    border">
+
+                                                    @expense.Category
+
+                                                </span>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </a>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- Right Sidebar -->
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    Group Actions
+                </div>
+
+                <div class="card-body">
+
+                    <a asp-controller="Expenses"
+                       asp-action="Create"
+                       asp-route-groupId="@Model.Id"
+                       class="btn btn-primary w-100 mb-2">
+
+                        + Add Expense
+
+                    </a>
+
+                    <a asp-controller="Expenses"
+                       asp-action="Index"
+                       asp-route-groupId="@Model.Id"
+                       class="btn btn-outline-primary w-100 mb-2">
+
+                        All Expenses
+
+                    </a>
+
+                    <a asp-controller="Settlements"
+                       asp-action="Index"
+                       asp-route-groupId="@Model.Id"
+                       class="btn btn-outline-success w-100 mb-2">
+
+                        Settle Up
+
+                    </a>
+
+                    <hr />
+
+                    <form asp-action="Archive"
+                          asp-route-id="@Model.Id"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="btn btn-outline-danger w-100"
+                                onclick="return confirm('Archive this group?');">
+
+                            Archive Group
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

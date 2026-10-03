@@ -9,14 +9,18 @@ namespace Spleet.Repositories
     {
         public GroupInviteRepository(SpleetDbContext context) : base(context) { }
 
-        public async Task<GroupInvite> CreateInviteLink(Guid groupId, Guid createdByUserId)
+        public async Task<GroupInvite> CreateInviteLink(
+       Guid groupId,
+       Guid createdByUserId)
         {
             var invite = new GroupInvite
             {
                 GroupId = groupId,
                 CreatedByUserId = createdByUserId
             };
+
             await _context.GroupInvites.AddAsync(invite);
+            await _context.SaveChangesAsync();
             return invite;
         }
 
@@ -26,14 +30,15 @@ namespace Spleet.Repositories
             if (invite != null)
             {
                 invite.IsRevoked = true;
+                await _context.SaveChangesAsync();
             }
         }
-
         public async Task<GroupInvite?> GetByToken(string token)
         {
-            return await _context.GroupInvites.FirstOrDefaultAsync(i => i.Token == token);
+            return await _context.GroupInvites
+                .Include(i => i.Group)
+                .FirstOrDefaultAsync(i => i.Token == token);
         }
-
         public async Task<IEnumerable<GroupInvite>> GetActiveInvitesForGroup(Guid groupId)
         {
             return await _context.GroupInvites

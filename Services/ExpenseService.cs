@@ -137,37 +137,59 @@ namespace Spleet.Services
             return expense.Id;
         }
 
-        public async Task UpdateAsync(ExpenseEditViewModel model, Guid currentUserId)
-        {
-            var expense = await _expenseRepository.GetWithSplits(model.Id);
-            if (expense == null || expense.IsDeleted)
-                throw new ArgumentException("Expense not found.");
+        public async Task UpdateAsync(
+    ExpenseEditViewModel model,
+    Guid currentUserId)
+{
+    var expense = await _expenseRepository.GetWithSplits(model.Id);
 
-            if (!await IsMemberAsync(expense.GroupId, currentUserId))
-                throw new ArgumentException("You are not a member of this group.");
+    if (expense == null || expense.IsDeleted)
+        throw new ArgumentException("Expense not found.");
 
-            await ValidateExpenseAsync(expense.GroupId, model.PaidByUserId, model.Amount,
-                model.SplitType, model.SelectedUserIds, model.CustomShares, currentUserId);
+    if (!await IsMemberAsync(expense.GroupId, currentUserId))
+        throw new ArgumentException("You are not a member of this group.");
 
-            _context.ExpenseSplits.RemoveRange(expense.Splits);
+    await ValidateExpenseAsync(
+        expense.GroupId,
+        model.PaidByUserId,
+        model.Amount,
+        model.SplitType,
+        model.SelectedUserIds,
+        model.CustomShares,
+        currentUserId);
 
-            expense.Description = model.Description.Trim();
-            expense.Amount = decimal.Round(model.Amount, 2);
-            expense.Category = string.IsNullOrWhiteSpace(model.Category) ? "general" : model.Category.Trim();
-            expense.PaidByUserId = model.PaidByUserId;
-            expense.SplitType = model.SplitType;
-            expense.ExpenseDate = model.ExpenseDate;
-            expense.Splits = BuildSplits(
-                expense.Amount,
-                expense.SplitType,
-                model.SelectedUserIds!.Distinct().ToList(),
-                model.CustomShares);
+    // Build the new splits before modifying the existing ones.
+    var newSplits = BuildSplits(
+        decimal.Round(model.Amount, 2),
+        model.SplitType,
+        model.SelectedUserIds!.Distinct().ToList(),
+        model.CustomShares);
 
-            foreach (var split in expense.Splits)
-                split.ExpenseId = expense.Id;
+    // Update the existing Expense entity.
+    expense.Description = model.Description.Trim();
+    expense.Amount = decimal.Round(model.Amount, 2);
+    expense.Category = string.IsNullOrWhiteSpace(model.Category)
+        ? "general"
+        : model.Category.Trim();
+    expense.PaidByUserId = model.PaidByUserId;
+    expense.SplitType = model.SplitType;
+    expense.ExpenseDate = model.ExpenseDate;
 
-            await _context.SaveChangesAsync();
-        }
+    // Remove the old split records first.
+    _context.ExpenseSplits.RemoveRange(expense.Splits);
+
+    await _context.SaveChangesAsync();
+
+    // Now add the newly calculated split records.
+    foreach (var split in newSplits)
+    {
+        split.ExpenseId = expense.Id;
+    }
+
+    await _context.ExpenseSplits.AddRangeAsync(newSplits);
+
+    await _context.SaveChangesAsync();
+}
 
         public async Task SoftDeleteAsync(Guid expenseId, Guid currentUserId)
         {

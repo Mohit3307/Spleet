@@ -39,18 +39,25 @@ namespace Spleet.Controllers
         }
 
         public async Task<IActionResult> Details(Guid id)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Challenge();
+{
+    var user = await _userManager.GetUserAsync(User);
+    if (user == null)
+        return Challenge();
 
-            if (!await _groupRepository.IsUserMemberAsync(id, user.Id))
-                return Forbid();
+    if (!await _groupRepository.IsUserMemberAsync(id, user.Id))
+        return Forbid();
 
-            var group = await _groupRepository.GetByIdWithMembersAsync(id);
-            if (group == null) return NotFound();
+    var group = await _groupRepository.GetByIdWithMembersAsync(id);
+    if (group == null)
+        return NotFound();
 
-            return View(group);
-        }
+    var recentExpenses =
+        await _expenseRepository.GetRecentForGroup(id, 5);
+
+    ViewBag.RecentExpenses = recentExpenses;
+
+    return View(group);
+}
 
         [HttpGet]
         public IActionResult Create() => View();

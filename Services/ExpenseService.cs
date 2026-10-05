@@ -137,34 +137,66 @@ namespace Spleet.Services
             return expense.Id;
         }
 
-        public async Task UpdateAsync(ExpenseEditViewModel model, Guid currentUserId)
+        public async Task UpdateAsync(
+    ExpenseEditViewModel model,
+    Guid currentUserId)
         {
-            var expense = await _expenseRepository.GetWithSplits(model.Id);
+            var expense = await _context.Expenses
+                .Include(e => e.Splits)
+                .FirstOrDefaultAsync(e => e.Id == model.Id);
+
             if (expense == null || expense.IsDeleted)
-                throw new ArgumentException("Expense not found.");
+                return;
 
+            // User must be a member of the expense's group
             if (!await IsMemberAsync(expense.GroupId, currentUserId))
-                throw new ArgumentException("You are not a member of this group.");
+                throw new UnauthorizedAccessException();
 
-            await ValidateExpenseAsync(expense.GroupId, model.PaidByUserId, model.Amount,
-                model.SplitType, model.SelectedUserIds, model.CustomShares, currentUserId);
+            // Validate the edited expense
+            await ValidateExpenseAsync(
+                expense.GroupId,
+                model.PaidByUserId,
+                model.Amount,
+                model.SplitType,
+                model.SelectedUserIds,
+                model.CustomShares,
+                currentUserId);
 
-            _context.ExpenseSplits.RemoveRange(expense.Splits);
+            var selectedIds = model.SelectedUserIds!
+                .Distinct()
+                .ToList();
 
+            // Build the new split records
+            var newSplits = BuildSplits(
+                model.Amount,
+                model.SplitType,
+                selectedIds,
+                model.CustomShares);
+
+            // Update the existing expense
             expense.Description = model.Description.Trim();
-            expense.Amount = decimal.Round(model.Amount, 2);
-            expense.Category = string.IsNullOrWhiteSpace(model.Category) ? "general" : model.Category.Trim();
+
+            expense.Amount = decimal.Round(
+                model.Amount,
+                2);
+
+            expense.Category = string.IsNullOrWhiteSpace(model.Category)
+                ? "general"
+                : model.Category.Trim();
+
             expense.PaidByUserId = model.PaidByUserId;
             expense.SplitType = model.SplitType;
             expense.ExpenseDate = model.ExpenseDate;
-            expense.Splits = BuildSplits(
-                expense.Amount,
-                expense.SplitType,
-                model.SelectedUserIds!.Distinct().ToList(),
-                model.CustomShares);
 
-            foreach (var split in expense.Splits)
+            // Remove the old splits
+            _context.ExpenseSplits.RemoveRange(expense.Splits);
+
+            // Add the new splits
+            foreach (var split in newSplits)
+            {
                 split.ExpenseId = expense.Id;
+                expense.Splits.Add(split);
+            }
 
             await _context.SaveChangesAsync();
         }

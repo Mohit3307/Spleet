@@ -38,16 +38,27 @@ namespace Spleet.Controllers
             return View(groups);
         }
 
+
+        [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Challenge();
+
+            if (user == null)
+                return Challenge();
+
+            var group = await _groupRepository.GetByIdWithMembersAsync(id);
+
+            if (group == null)
+                return NotFound();
 
             if (!await _groupRepository.IsUserMemberAsync(id, user.Id))
                 return Forbid();
 
-            var group = await _groupRepository.GetByIdWithMembersAsync(id);
-            if (group == null) return NotFound();
+            var recentExpenses =
+                await _expenseRepository.GetRecentForGroup(id, 5);
+
+            ViewBag.RecentExpenses = recentExpenses;
 
             return View(group);
         }

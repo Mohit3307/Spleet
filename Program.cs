@@ -24,6 +24,13 @@ builder.Services
     .AddEntityFrameworkStores<SpleetDbContext>()
     .AddDefaultTokenProviders();
 
+// Configure Identity cookie paths
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
+
 // Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IGroupRepository, GroupRepository>();

@@ -1,0 +1,113 @@
+﻿@using Spleet.Models
+@model GroupInvite
+
+@{
+    ViewData["Title"] = "Group Invitation";
+}
+
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-7 col-lg-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header text-center">
+                    <h4 class="mb-0">You're Invited!</h4>
+                </div>
+
+                <div class="card-body text-center">
+
+                    @if (Model.Group != null)
+                    {
+                        <h2 class="mb-3">
+                            @Model.Group.Name
+                        </h2>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.Group.Description))
+                        {
+                            <p class="text-muted">
+                                @Model.Group.Description
+                            </p>
+                        }
+
+                        <div class="mb-3">
+
+                            <span class="badge bg-secondary">
+                                @Model.Group.CurrencyCode
+                            </span>
+
+                            @if (!string.IsNullOrWhiteSpace(Model.Group.GroupType))
+                            {
+                                <span class="badge bg-light text-dark border">
+                                    @Model.Group.GroupType
+                                </span>
+                            }
+
+                        </div>
+                    }
+
+                    <p class="text-muted">
+                        You have been invited to join this group on Spleet.
+                    </p>
+
+                    <p class="small text-muted">
+                        This invitation expires on
+                        <strong>
+                            @Model.ExpiresAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                        </strong>.
+                    </p>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form asp-controller="Invites"
+                              asp-action="Join"
+                              method="post">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden"
+                                   name="token"
+                                   value="@Model.Token" />
+
+                            <button type="submit"
+                                    class="btn btn-primary w-100">
+                                Join Group
+                            </button>
+
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            Please log in before joining this group.
+                        </div>
+
+                        <a asp-area="Identity"
+                           asp-page="/Account/Login"
+                           asp-route-returnUrl="@Context.Request.Path@Context.Request.QueryString"
+                           class="btn btn-primary w-100">
+                            Log In to Join
+                        </a>
+                    }
+
+                    <div class="mt-3">
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-outline-secondary">
+                            Back to Home
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

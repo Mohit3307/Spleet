@@ -67,9 +67,9 @@
                             @foreach (var member in Model.Members)
                             {
                                 <div class="list-group-item
-                                            d-flex
-                                            justify-content-between
-                                            align-items-center">
+                                    d-flex
+                                    justify-content-between
+                                    align-items-center">
 
                                     <div>
                                         <strong>
@@ -102,13 +102,58 @@
             </div>
 
 
+            <!-- Add Existing User -->
+            <div class="card shadow-sm mb-4">
+
+                <div class="card-header">
+                    <h5 class="mb-0">Add Existing User</h5>
+                </div>
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+                        Add a registered Spleet user directly to this group
+                        using their email address.
+                    </p>
+
+                    <form asp-controller="Invites"
+                          asp-action="AddByEmail"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <input type="hidden"
+                               name="groupId"
+                               value="@Model.Id" />
+
+                        <div class="input-group">
+
+                            <input type="email"
+                                   name="email"
+                                   class="form-control"
+                                   placeholder="user@example.com"
+                                   required />
+
+                            <button type="submit"
+                                    class="btn btn-primary">
+                                Add User
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+
             <!-- Recent Expenses -->
             <div class="card shadow-sm mb-4">
 
                 <div class="card-header
-                            d-flex
-                            justify-content-between
-                            align-items-center">
+                    d-flex
+                    justify-content-between
+                    align-items-center">
 
                     <h5 class="mb-0">
                         Recent Expenses
@@ -152,11 +197,11 @@
                                    asp-action="Details"
                                    asp-route-id="@expense.Id"
                                    class="list-group-item
-                                          list-group-item-action">
+                                    list-group-item-action">
 
                                     <div class="d-flex
-                                                justify-content-between
-                                                align-items-center">
+                                        justify-content-between
+                                        align-items-center">
 
                                         <div>
 
@@ -174,8 +219,8 @@
                                                 ·
 
                                                 @expense.ExpenseDate
-                                                    .ToLocalTime()
-                                                    .ToString("dd MMM yyyy")
+                                                .ToLocalTime()
+                                                .ToString("dd MMM yyyy")
 
                                             </div>
 
@@ -250,6 +295,15 @@
                        class="btn btn-outline-success w-100 mb-2">
 
                         Settle Up
+
+                    </a>
+
+                    <a asp-controller="Invites"
+                       asp-action="Create"
+                       asp-route-groupId="@Model.Id"
+                       class="btn btn-outline-info w-100 mb-2">
+
+                        Create Invite Link
 
                     </a>
 

@@ -65,4 +65,3 @@ namespace Spleet.Repositories
                 .ToListAsync();
         }
     }
-}

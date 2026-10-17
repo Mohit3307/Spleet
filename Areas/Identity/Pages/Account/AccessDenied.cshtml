@@ -1,0 +1,41 @@
+﻿@page
+@model AccessDeniedModel
+
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="error-page">
+    <div class="error-card">
+        <div class="error-icon">!</div>
+
+        <div class="error-content">
+            <span class="error-eyebrow">Access restricted</span>
+
+            <h1>Action not available</h1>
+
+            <p class="error-message">
+                You don't have permission to perform this action.
+            </p>
+
+            <p class="error-detail">
+                Only the person receiving the payment can confirm or dispute
+                this settlement.
+            </p>
+
+            <div class="error-actions">
+                <a asp-controller="Settlements"
+                   asp-action="Index"
+                   class="btn btn-primary">
+                    Back to Settle Up
+                </a>
+
+                <a asp-controller="Home"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

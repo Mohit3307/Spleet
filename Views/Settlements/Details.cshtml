@@ -1,48 +1,155 @@
 @using Spleet.Models
 @model Settlement
+
 @{
-    ViewData["Title"] = "Settlement";
+    ViewData["Title"] = "Settlement Details";
+
+    var payerName = Model.Payer?.FullName ?? Model.Payer?.UserName ?? "User";
+    var payeeName = Model.Payee?.FullName ?? Model.Payee?.UserName ?? "User";
+
+    var statusClass = Model.Status switch
+    {
+        SettlementStatus.Pending => "settlement-status settlement-status-pending",
+        SettlementStatus.Completed => "settlement-status settlement-status-confirmed",
+        SettlementStatus.Disputed => "settlement-status settlement-status-disputed",
+        _ => "settlement-status"
+    };
 }
-<div class="container mt-4">
-    <div class="mb-4">
-        <h1>Settlement</h1>
-        <p class="text-muted">@(Model.Payer?.FullName ?? Model.Payer?.UserName ?? "User") → @(Model.Payee?.FullName ?? Model.Payee?.UserName ?? "User")</p>
+
+<div class="settlement-page">
+    <div class="settlement-header">
+        <div>
+            <span class="eyebrow">Settle Up</span>
+            <h1>Settlement Details</h1>
+            <p class="settlement-route">
+                <span>@payerName</span>
+                <span class="settlement-arrow">→</span>
+                <span>@payeeName</span>
+            </p>
+        </div>
+
+        <a asp-action="Index"
+           asp-route-groupId="@Model.GroupId"
+           class="btn btn-outline-secondary">
+            Back to Settle Up
+        </a>
     </div>
 
     @if (TempData["Error"] is string error)
     {
-        <div class="alert alert-danger">@error</div>
+        <div class="alert alert-danger settlement-alert">
+            @error
+        </div>
     }
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h2>@Model.Amount.ToString("0.00")</h2>
-            <p><strong>Status:</strong> @Model.Status</p>
-            <p><strong>Created:</strong> @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
-            @if (Model.AutoConfirmDeadline.HasValue && Model.Status == SettlementStatus.Pending)
-            {
-                <p><strong>Auto-confirm:</strong> @Model.AutoConfirmDeadline.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
-            }
+    <div class="settlement-layout">
+        <section class="settlement-main-card">
+            <div class="settlement-card-top">
+                <div>
+                    <span class="settlement-label">Payment amount</span>
+                    <div class="settlement-amount">
+                        @Model.Amount.ToString("0.00")
+                    </div>
+                </div>
+
+                <span class="@statusClass">
+                    @Model.Status
+                </span>
+            </div>
+
+            <div class="settlement-info-grid">
+                <div class="settlement-info-item">
+                    <span>From</span>
+                    <strong>@payerName</strong>
+                </div>
+
+                <div class="settlement-info-item">
+                    <span>To</span>
+                    <strong>@payeeName</strong>
+                </div>
+
+                <div class="settlement-info-item">
+                    <span>Created</span>
+                    <strong>@Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</strong>
+                </div>
+
+                @if (Model.AutoConfirmDeadline.HasValue && Model.Status == SettlementStatus.Pending)
+                {
+                    <div class="settlement-info-item">
+                        <span>Auto-confirm</span>
+                        <strong>@Model.AutoConfirmDeadline.Value.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</strong>
+                    </div>
+                }
+            </div>
+
             @if (!string.IsNullOrWhiteSpace(Model.Note))
             {
-                <p><strong>Note:</strong> @Model.Note</p>
+                <div class="settlement-note">
+                    <span>Note</span>
+                    <p>@Model.Note</p>
+                </div>
             }
-        </div>
+        </section>
+
+        @if (Model.Status == SettlementStatus.Pending)
+        {
+            <section class="settlement-action-card">
+                <div>
+                    <span class="settlement-label">Action required</span>
+                    <h2>Review this payment</h2>
+                    <p>
+                        Confirm the payment if you received it. If something is wrong,
+                        you can dispute it instead.
+                    </p>
+                </div>
+
+                <div class="settlement-actions">
+                    <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-success" type="submit">
+                            Confirm Payment
+                        </button>
+                    </form>
+
+                    <form asp-action="Dispute" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-outline-danger" type="submit">
+                            Dispute Payment
+                        </button>
+                    </form>
+                </div>
+            </section>
+        }
+        else
+        {
+            <section class="settlement-action-card settlement-complete-card">
+                <span class="settlement-label">Settlement status</span>
+                <h2>
+                    @if (Model.Status == SettlementStatus.Completed)
+                    {
+                        @:Payment confirmed
+                    }
+                    else if (Model.Status == SettlementStatus.Disputed)
+                    {
+                        @:Payment disputed
+                    }
+                    else
+                    {
+                        @:Settlement updated
+                    }
+                </h2>
+                <p>
+                    This settlement no longer requires an action from you.
+                </p>
+            </section>
+        }
     </div>
 
-    @if (Model.Status == SettlementStatus.Pending)
-    {
-        <div class="d-flex gap-2">
-            <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
-                @Html.AntiForgeryToken()
-                <button class="btn btn-success" type="submit">Confirm Payment</button>
-            </form>
-            <form asp-action="Dispute" asp-route-id="@Model.Id" method="post">
-                @Html.AntiForgeryToken()
-                <button class="btn btn-outline-danger" type="submit">Dispute</button>
-            </form>
-        </div>
-    }
-
-    <a asp-action="Index" asp-route-groupId="@Model.GroupId" class="btn btn-link mt-3">Back to Settle Up</a>
+    <div class="settlement-bottom-link">
+        <a asp-action="Index"
+           asp-route-groupId="@Model.GroupId"
+           class="text-link">
+            ← Back to Settle Up
+        </a>
+    </div>
 </div>

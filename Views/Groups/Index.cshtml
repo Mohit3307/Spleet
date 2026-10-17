@@ -1,42 +1,106 @@
-@model List<Spleet.Models.Group>
+@using Spleet.Models
+@model IEnumerable<Group>
 
 @{
-    ViewData["Title"] = "My Groups";
+    ViewData["Title"] = "Groups";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container">
+
+    <div class="dashboard-hero">
         <div>
-            <h1>My Groups</h1>
-            <p class="text-muted">Groups you currently belong to.</p>
+            <p class="eyebrow">YOUR GROUPS</p>
+            <h1>Groups</h1>
+            <p class="page-subtitle">
+                Manage your shared expenses and members.
+            </p>
         </div>
-        <a asp-action="Create" class="btn btn-primary">+ Create Group</a>
+
+        <a asp-action="Create" class="primary-button">
+            + Create group
+        </a>
     </div>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">You are not part of any groups yet.</div>
-    }
-    else
-    {
-        <div class="row">
-            @foreach (var group in Model)
-            {
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">@group.Name</h5>
-                            <p class="card-text text-muted">
-                                @(string.IsNullOrWhiteSpace(group.Description) ? "No description" : group.Description)
-                            </p>
-                            <span class="badge bg-secondary">@group.CurrencyCode</span>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <a asp-action="Details" asp-route-id="@group.Id" class="btn btn-outline-primary">Open Group</a>
-                        </div>
-                    </div>
-                </div>
-            }
+    <div class="section-block">
+
+        <div class="section-heading">
+            <h2>Your groups</h2>
+
+            <span class="text-muted small">
+                @Model.Count() active group@(Model.Count() == 1 ? "" : "s")
+            </span>
         </div>
-    }
+
+        @if (!Model.Any())
+        {
+            <div class="empty-card">
+
+                <div class="empty-icon">
+                    G
+                </div>
+
+                <h3>No groups yet</h3>
+
+                <p>
+                    Create your first group to start sharing
+                    expenses with friends, roommates or family.
+                </p>
+
+                <a asp-action="Create"
+                   class="primary-button">
+                    Create your first group
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div class="group-grid">
+
+                @foreach (var group in Model)
+                {
+                    <a asp-action="Details"
+                       asp-route-id="@group.Id"
+                       class="group-card">
+
+                        <div class="group-icon">
+                            @group.Name.Substring(0, 1).ToUpper()
+                        </div>
+
+                        <div class="group-card-body">
+
+                            <h3>
+                                @group.Name
+                            </h3>
+
+                            <p>
+                                @(string.IsNullOrWhiteSpace(group.Description)
+                                    ? "No description"
+                                    : group.Description)
+                            </p>
+
+                            <div class="mt-2">
+                                <span class="badge bg-secondary">
+                                    @group.GroupType
+                                </span>
+
+                                <span class="badge bg-light text-dark border">
+                                    @group.CurrencyCode
+                                </span>
+                            </div>
+
+                        </div>
+
+                        <span class="group-arrow">
+                            →
+                        </span>
+
+                    </a>
+                }
+
+            </div>
+        }
+
+    </div>
+
 </div>

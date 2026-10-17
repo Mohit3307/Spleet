@@ -7,172 +7,216 @@
     var recentExpenses =
         ViewBag.RecentExpenses as IEnumerable<Expense>
         ?? Enumerable.Empty<Expense>();
+
+    var balances =
+        ViewBag.Balances as Dictionary<Guid, decimal>
+        ?? new Dictionary<Guid, decimal>();
 }
 
-<div class="container mt-4">
+<div class="container py-5">
 
-    <!-- Group Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div>
-            <h1>@Model.Name</h1>
+    <!-- GROUP HEADER -->
+    <div class="mb-4">
 
-            @if (!string.IsNullOrWhiteSpace(Model.Description))
-            {
-                <p class="text-muted">@Model.Description</p>
-            }
+        <div class="eyebrow">
+            GROUP
+        </div>
 
-            <span class="badge bg-secondary">
-                @Model.CurrencyCode
+        <h1 class="display-5 fw-semibold mb-2">
+            @Model.Name
+        </h1>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge bg-light border text-dark">
+                @Model.GroupType
             </span>
 
-            @if (!string.IsNullOrWhiteSpace(Model.GroupType))
-            {
-                <span class="badge bg-light text-dark border ms-1">
-                    @Model.GroupType
-                </span>
-            }
+            <span class="badge bg-light border text-dark">
+                @Model.CurrencyCode
+            </span>
         </div>
 
         <a asp-action="Index"
            class="btn btn-outline-secondary">
             Back to Groups
         </a>
+
     </div>
 
 
-    <div class="row">
+    <div class="row g-4">
 
-        <!-- Main Content -->
-        <div class="col-md-8">
+        <!-- =========================
+             LEFT SIDE
+             ========================= -->
+        <div class="col-lg-8">
 
-            <!-- Members -->
-            <div class="card shadow-sm mb-4">
+            <!-- MEMBERS -->
+            <section class="mb-4">
 
-                <div class="card-header">
-                    <h5 class="mb-0">Members</h5>
+                <div class="section-heading">
+                    <h2>Members</h2>
                 </div>
 
-                <div class="card-body">
+                <div class="card shadow-sm">
 
-                    @if (!Model.Members.Any())
-                    {
-                        <p class="text-muted mb-0">
-                            No members found.
-                        </p>
-                    }
-                    else
-                    {
-                        <div class="list-group">
+                    <div class="list-group list-group-flush">
 
-                            @foreach (var member in Model.Members)
+                        @foreach (var member in Model.Members)
+                        {
+                            var name =
+                                member.User?.FullName
+                                ?? member.User?.UserName
+                                ?? "Unknown user";
+
+                            var email =
+                                member.User?.Email
+                                ?? "";
+
+                            var balance = 0m;
+
+                            if (balances.TryGetValue(
+                                member.UserId,
+                                out var calculatedBalance))
                             {
-                                <div class="list-group-item
-                                    d-flex
-                                    justify-content-between
-                                    align-items-center">
+                                balance = calculatedBalance;
+                            }
 
-                                    <div>
-                                        <strong>
-                                            @(member.User?.FullName
-                                                ?? member.User?.UserName
-                                                ?? "Unknown user")
-                                        </strong>
+                            var initial =
+                                string.IsNullOrWhiteSpace(name)
+                                    ? "U"
+                                    : name.Substring(0, 1).ToUpperInvariant();
 
-                                        <div class="text-muted small">
-                                            @member.User?.Email
+                            <div class="list-group-item">
+
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+
+                                    <div class="d-flex align-items-start gap-3">
+
+                                        <!-- Avatar -->
+                                        <div class="group-icon">
+                                            @initial
                                         </div>
+
+                                        <div>
+
+                                            <div class="fw-semibold">
+                                                @name
+                                            </div>
+
+                                            <div class="text-muted small">
+                                                @email
+                                            </div>
+
+                                            @if (balance > 0.005m)
+                                            {
+                                                <div class="balance-positive">
+                                                    Receives
+                                                    @Model.CurrencyCode
+                                                    @balance.ToString("0.00")
+                                                </div>
+                                            }
+                                            else if (balance < -0.005m)
+                                            {
+                                                <div class="balance-negative">
+                                                    Owes
+                                                    @Model.CurrencyCode
+                                                    @Math.Abs(balance).ToString("0.00")
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="balance-neutral">
+                                                    Settled
+                                                </div>
+                                            }
+
+                                        </div>
+
                                     </div>
 
-                                    <span class="badge
-                                        @(member.Role == GroupRole.Admin
-                                            ? "bg-primary"
-                                            : "bg-secondary")">
-
+                                    <span class="badge @(member.Role == GroupRole.Admin
+                                        ? "bg-primary"
+                                        : "bg-secondary")">
                                         @member.Role
-
                                     </span>
 
                                 </div>
-                            }
 
-                        </div>
-                    }
+                            </div>
+                        }
+
+                    </div>
 
                 </div>
-            </div>
+
+            </section>
 
 
-            <!-- Add Existing User -->
-            <div class="card shadow-sm mb-4">
+            <!-- ADD MEMBER -->
+            <section class="mb-4">
 
-                <div class="card-header">
-                    <h5 class="mb-0">Add Existing User</h5>
+                <div class="section-heading">
+                    <h2>Add a member</h2>
                 </div>
 
-                <div class="card-body">
+                <div class="card shadow-sm">
 
-                    <p class="text-muted">
-                        Add a registered Spleet user directly to this group
-                        using their email address.
-                    </p>
+                    <div class="card-body">
 
-                    <form asp-controller="Invites"
-                          asp-action="AddByEmail"
-                          method="post">
+                        <p class="text-muted">
+                            Add an existing Spleet user using their
+                            registered email address.
+                        </p>
 
-                        @Html.AntiForgeryToken()
-
-                        <input type="hidden"
-                               name="groupId"
-                               value="@Model.Id" />
-
+                        <!--
+                            Member adding is not connected to a controller
+                            action yet, so this remains UI-only for now.
+                        -->
                         <div class="input-group">
 
                             <input type="email"
-                                   name="email"
                                    class="form-control"
-                                   placeholder="user@example.com"
-                                   required />
+                                   placeholder="user@example.com" />
 
-                            <button type="submit"
+                            <button type="button"
                                     class="btn btn-primary">
                                 Add User
                             </button>
 
                         </div>
 
-                    </form>
+                    </div>
 
                 </div>
-            </div>
+
+            </section>
 
 
-            <!-- Recent Expenses -->
-            <div class="card shadow-sm mb-4">
+            <!-- RECENT EXPENSES -->
+            <section>
 
-                <div class="card-header
-                    d-flex
-                    justify-content-between
-                    align-items-center">
+                <div class="section-heading">
 
-                    <h5 class="mb-0">
-                        Recent Expenses
-                    </h5>
+                    <h2>
+                        Recent expenses
+                    </h2>
 
                     <a asp-controller="Expenses"
                        asp-action="Index"
                        asp-route-groupId="@Model.Id"
-                       class="btn btn-sm btn-outline-primary">
-                        View All
+                       class="text-link">
+                        View all
                     </a>
 
                 </div>
 
-                <div class="card-body p-0">
+
+                <div class="card shadow-sm">
 
                     @if (!recentExpenses.Any())
                     {
-                        <div class="p-4 text-center">
+                        <div class="card-body text-center">
 
                             <p class="text-muted mb-3">
                                 No expenses have been added yet.
@@ -182,7 +226,7 @@
                                asp-action="Create"
                                asp-route-groupId="@Model.Id"
                                class="btn btn-primary">
-                                + Add First Expense
+                                Add your first expense
                             </a>
 
                         </div>
@@ -196,20 +240,17 @@
                                 <a asp-controller="Expenses"
                                    asp-action="Details"
                                    asp-route-id="@expense.Id"
-                                   class="list-group-item
-                                    list-group-item-action">
+                                   class="list-group-item list-group-item-action">
 
-                                    <div class="d-flex
-                                        justify-content-between
-                                        align-items-center">
+                                    <div class="d-flex justify-content-between align-items-center gap-3">
 
                                         <div>
 
-                                            <strong>
+                                            <div class="fw-semibold">
                                                 @expense.Description
-                                            </strong>
+                                            </div>
 
-                                            <div class="small text-muted">
+                                            <div class="text-muted small">
 
                                                 Paid by
                                                 @(expense.PaidBy?.FullName
@@ -219,8 +260,8 @@
                                                 ·
 
                                                 @expense.ExpenseDate
-                                                .ToLocalTime()
-                                                .ToString("dd MMM yyyy")
+                                                    .ToLocalTime()
+                                                    .ToString("dd MMM yyyy")
 
                                             </div>
 
@@ -234,13 +275,8 @@
                                             </strong>
 
                                             <div>
-                                                <span class="badge
-                                                    bg-light
-                                                    text-dark
-                                                    border">
-
+                                                <span class="badge bg-light text-dark border">
                                                     @expense.Category
-
                                                 </span>
                                             </div>
 
@@ -255,79 +291,84 @@
                     }
 
                 </div>
-            </div>
+
+            </section>
 
         </div>
 
 
-        <!-- Right Sidebar -->
-        <div class="col-md-4">
+        <!-- =========================
+             RIGHT SIDE
+             ========================= -->
+        <div class="col-lg-4">
 
-            <div class="card shadow-sm">
+            <section>
 
-                <div class="card-header">
-                    Group Actions
+                <div class="section-heading">
+                    <h2>Group actions</h2>
                 </div>
 
-                <div class="card-body">
+                <div class="card shadow-sm">
 
-                    <a asp-controller="Expenses"
-                       asp-action="Create"
-                       asp-route-groupId="@Model.Id"
-                       class="btn btn-primary w-100 mb-2">
+                    <div class="card-body d-grid gap-2">
 
-                        + Add Expense
+                        <!-- ADD EXPENSE -->
+                        <a asp-controller="Expenses"
+                           asp-action="Create"
+                           asp-route-groupId="@Model.Id"
+                           class="btn btn-primary">
+                            + Add expense
+                        </a>
 
-                    </a>
 
-                    <a asp-controller="Expenses"
-                       asp-action="Index"
-                       asp-route-groupId="@Model.Id"
-                       class="btn btn-outline-primary w-100 mb-2">
+                        <!-- ALL EXPENSES -->
+                        <a asp-controller="Expenses"
+                           asp-action="Index"
+                           asp-route-groupId="@Model.Id"
+                           class="btn btn-outline-primary">
+                            All expenses
+                        </a>
 
-                        All Expenses
 
-                    </a>
+                        <!-- SETTLE UP -->
+                        <a asp-controller="Settlements"
+                           asp-action="Index"
+                           asp-route-groupId="@Model.Id"
+                           class="btn btn-outline-success">
+                            Settle up
+                        </a>
 
-                    <a asp-controller="Settlements"
-                       asp-action="Index"
-                       asp-route-groupId="@Model.Id"
-                       class="btn btn-outline-success w-100 mb-2">
 
-                        Settle Up
+                        <!-- INVITE -->
+                        <a href="#"
+                           class="btn btn-outline-secondary">
+                            Create invite link
+                        </a>
 
-                    </a>
 
-                    <a asp-controller="Invites"
-                       asp-action="Create"
-                       asp-route-groupId="@Model.Id"
-                       class="btn btn-outline-info w-100 mb-2">
+                        <hr class="my-2" />
 
-                        Create Invite Link
 
-                    </a>
+                        <!-- ARCHIVE -->
+                        <form asp-action="Archive"
+                              asp-route-id="@Model.Id"
+                              method="post">
 
-                    <hr />
+                            @Html.AntiForgeryToken()
 
-                    <form asp-action="Archive"
-                          asp-route-id="@Model.Id"
-                          method="post">
+                            <button type="submit"
+                                    class="btn btn-outline-danger w-100"
+                                    onclick="return confirm('Archive this group?');">
+                                Archive group
+                            </button>
 
-                        @Html.AntiForgeryToken()
+                        </form>
 
-                        <button type="submit"
-                                class="btn btn-outline-danger w-100"
-                                onclick="return confirm('Archive this group?');">
-
-                            Archive Group
-
-                        </button>
-
-                    </form>
+                    </div>
 
                 </div>
 
-            </div>
+            </section>
 
         </div>
 

@@ -1,270 +1,201 @@
-@model IEnumerable<Spleet.Models.Group>
+@using Spleet.Models
+@model IEnumerable<Group>
 
 @{
     ViewData["Title"] = "Dashboard";
 
-    var user = ViewBag.User as Spleet.Models.User;
-
-    var recentExpenses =
-        ViewBag.RecentExpenses as IEnumerable<Spleet.Models.Expense>
-        ?? Enumerable.Empty<Spleet.Models.Expense>();
+    var user = ViewBag.User as User;
 }
 
-<section class="dashboard-hero">
-    <div>
-        <p class="eyebrow">Dashboard</p>
+<div class="dashboard-page">
 
-        <h1>
-            Welcome back, @(user?.FullName ?? "there")
-        </h1>
-
-        <p class="page-subtitle">
-            Keep your group expenses simple and organised.
-        </p>
-    </div>
-
-    <a asp-controller="Groups"
-       asp-action="Create"
-       class="primary-button">
-        + Create group
-    </a>
-</section>
-
-
-<!-- =========================
-     DASHBOARD STATS
-     ========================= -->
-
-<section class="stats-grid">
-
-    <div class="stat-card">
-        <span class="stat-label">
-            Your groups
-        </span>
-
-        <strong>
-            @Model.Count()
-        </strong>
-
-        <span class="stat-note">
-            Active groups
-        </span>
-    </div>
-
-
-    <div class="stat-card">
-        <span class="stat-label">
-            Recent expenses
-        </span>
-
-        <strong>
-            @recentExpenses.Count()
-        </strong>
-
-        <span class="stat-note">
-            Latest expenses
-        </span>
-    </div>
-
-
-    <div class="stat-card">
-        <span class="stat-label">
-            Balance
-        </span>
-
-        <strong>
-            —
-        </strong>
-
-        <span class="stat-note">
-            Calculated in Settle Up
-        </span>
-    </div>
-
-</section>
-
-
-<!-- =========================
-     RECENT EXPENSES
-     ========================= -->
-
-<section class="section-block">
-
-    <div class="section-heading">
+    <!-- Dashboard Header -->
+    <section class="dashboard-header">
 
         <div>
-            <p class="eyebrow">
-                Activity
+            <p class="eyebrow">DASHBOARD</p>
+
+            <h1>
+                Welcome,
+                @(string.IsNullOrWhiteSpace(user?.FullName)
+                    ? user?.UserName
+                    : user.FullName)
+            </h1>
+
+            <p class="dashboard-subtitle">
+                Manage your groups, expenses and settlements.
             </p>
-
-            <h2>
-                Recent Expenses
-            </h2>
         </div>
 
-    </div>
-
-
-    @if (recentExpenses.Any())
-    {
-        <div class="expense-list">
-
-            @foreach (var expense in recentExpenses)
-            {
-                <a asp-controller="Expenses"
-                   asp-action="Details"
-                   asp-route-id="@expense.Id"
-                   class="expense-card">
-
-                    <div class="expense-card-main">
-
-                        <h3>
-                            @expense.Description
-                        </h3>
-
-                        <p>
-                            @(expense.PaidBy?.FullName
-                                ?? expense.PaidBy?.UserName
-                                ?? "Unknown user")
-
-                            ·
-
-                            @expense.ExpenseDate
-                                .ToLocalTime()
-                                .ToString("dd MMM yyyy")
-                        </p>
-
-                    </div>
-
-
-                    <div class="expense-card-amount">
-
-                        <strong>
-                            ₹@expense.Amount.ToString("0.00")
-                        </strong>
-
-                        <span>
-                            @expense.Category
-                        </span>
-
-                    </div>
-
-                </a>
-            }
-
-        </div>
-    }
-    else
-    {
-        <div class="empty-card">
-
-            <div class="empty-icon">
-                ₹
-            </div>
-
-            <h3>
-                No expenses yet
-            </h3>
-
-            <p>
-                Add an expense to one of your groups and it will appear here.
-            </p>
-
-        </div>
-    }
-
-</section>
-
-
-<!-- =========================
-     YOUR GROUPS
-     ========================= -->
-
-<section class="section-block">
-
-    <div class="section-heading">
-
-        <div>
-            <p class="eyebrow">
-                Your groups
-            </p>
-
-            <h2>
-                Groups
-            </h2>
-        </div>
-
-        <a asp-controller="Groups"
-           asp-action="Index"
-           class="text-link">
-            View all
-        </a>
-
-    </div>
-
-
-    @if (Model.Any())
-    {
-        <div class="group-grid">
-
-            @foreach (var group in Model)
-            {
-                <a asp-controller="Groups"
-                   asp-action="Details"
-                   asp-route-id="@group.Id"
-                   class="group-card">
-
-                    <div class="group-icon">
-                        G
-                    </div>
-
-                    <div class="group-card-body">
-
-                        <h3>
-                            @group.Name
-                        </h3>
-
-                        <p>
-                            @(string.IsNullOrWhiteSpace(group.Description)
-                                ? "No description"
-                                : group.Description)
-                        </p>
-
-                    </div>
-
-                    <span class="group-arrow">
-                        →
-                    </span>
-
-                </a>
-            }
-
-        </div>
-    }
-    else
-    {
-        <div class="empty-card">
-
-            <div class="empty-icon">
-                +
-            </div>
-
-            <h3>
-                Create your first group
-            </h3>
-
-            <p>
-                Start a group for roommates, friends, a trip,
-                or anything you split together.
-            </p>
+        <div class="dashboard-actions">
 
             <a asp-controller="Groups"
                asp-action="Create"
-               class="primary-button">
-                Create group
+               class="btn btn-primary">
+                + Create Group
             </a>
 
         </div>
-    }
 
-</section>
+    </section>
+
+
+    <!-- Quick Actions -->
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">QUICK ACTIONS</p>
+                <h2>What do you want to do?</h2>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+
+            <a asp-controller="Groups"
+               asp-action="Create"
+               class="quick-action-card">
+
+                <div class="quick-action-icon">
+                    +
+                </div>
+
+                <div>
+                    <h3>Create Group</h3>
+                    <p>
+                        Start a new expense-sharing group.
+                    </p>
+                </div>
+
+            </a>
+
+            <a asp-controller="Groups"
+               asp-action="Index"
+               class="quick-action-card">
+
+                <div class="quick-action-icon">
+                    →
+                </div>
+
+                <div>
+                    <h3>View Groups</h3>
+                    <p>
+                        Open one of your existing groups.
+                    </p>
+                </div>
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- Groups -->
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+                <p class="eyebrow">YOUR GROUPS</p>
+                <h2>Groups</h2>
+            </div>
+
+            <a asp-controller="Groups"
+               asp-action="Index"
+               class="btn btn-outline-primary">
+                View All
+            </a>
+
+        </div>
+
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty-state">
+
+                <div class="empty-state-icon">
+                    +
+                </div>
+
+                <h3>No groups yet</h3>
+
+                <p>
+                    Create your first group to start sharing expenses.
+                </p>
+
+                <a asp-controller="Groups"
+                   asp-action="Create"
+                   class="btn btn-primary">
+                    Create Your First Group
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div class="group-grid">
+
+                @foreach (var group in Model)
+                {
+                    <a asp-controller="Groups"
+                       asp-action="Details"
+                       asp-route-id="@group.Id"
+                       class="group-card">
+
+                        <div class="group-card-top">
+
+                            <div class="group-icon">
+                                @group.Name.Substring(0, 1).ToUpper()
+                            </div>
+
+                            <span class="group-currency">
+                                @group.CurrencyCode
+                            </span>
+
+                        </div>
+
+
+                        <div class="group-card-content">
+
+                            <h3>
+                                @group.Name
+                            </h3>
+
+                            @if (!string.IsNullOrWhiteSpace(group.Description))
+                            {
+                                <p>
+                                    @group.Description
+                                </p>
+                            }
+                            else
+                            {
+                                <p>
+                                    @group.GroupType
+                                </p>
+                            }
+
+                        </div>
+
+
+                        <div class="group-card-footer">
+
+                            <span>
+                                Open group
+                            </span>
+
+                            <span class="group-arrow">
+                                →
+                            </span>
+
+                        </div>
+
+                    </a>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>

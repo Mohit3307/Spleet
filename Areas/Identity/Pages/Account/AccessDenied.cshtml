@@ -12,30 +12,30 @@
         <div class="error-content">
             <span class="error-eyebrow">Access restricted</span>
 
-            <h1>Action not available</h1>
+        <h1>Action not available</h1>
 
-            <p class="error-message">
-                You don't have permission to perform this action.
-            </p>
+        <p>
+            You don't have permission to perform this action.
+        </p>
 
-            <p class="error-detail">
-                Only the person receiving the payment can confirm or dispute
-                this settlement.
-            </p>
+        <p>
+            Only the person receiving the payment can confirm or
+            dispute a settlement.
+        </p>
 
-            <div class="error-actions">
-                <a asp-controller="Settlements"
-                   asp-action="Index"
-                   class="btn btn-primary">
-                    Back to Settle Up
-                </a>
+        <div class="error-actions">
+            <a asp-controller="Home"
+               asp-action="Index"
+               class="btn btn-primary">
+                Go to Dashboard
+            </a>
 
-                <a asp-controller="Home"
-                   asp-action="Index"
-                   class="btn btn-outline-secondary">
-                    Go to Dashboard
-                </a>
-            </div>
+            <a asp-controller="Groups"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                View Groups
+            </a>
         </div>
     </div>
+</div>
 </div>

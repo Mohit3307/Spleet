@@ -5,19 +5,32 @@
     ViewData["Title"] = Model.Description;
 }
 
-<div class="container mt-4">
+<div class="container">
 
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-start mb-4">
+    <div class="dashboard-hero">
+
         <div>
-            <h1>@Model.Description</h1>
 
-            <p class="text-muted">
-                @Model.Category · @(Model.ExpenseDate.ToLocalTime().ToString("dd MMM yyyy"))
+            <p class="eyebrow">EXPENSE</p>
+
+            <h1>
+                @Model.Description
+            </h1>
+
+            <p class="page-subtitle">
+
+                @Model.Category
+                ·
+                @(Model.ExpenseDate
+                    .ToLocalTime()
+                    .ToString("dd MMM yyyy"))
+
             </p>
+
         </div>
 
-        <div>
+        <div class="d-flex gap-2">
+
             <a asp-action="Edit"
                asp-route-id="@Model.Id"
                class="btn btn-outline-primary">
@@ -29,74 +42,139 @@
                class="btn btn-outline-secondary">
                 Back
             </a>
+
         </div>
+
     </div>
 
-    <!-- Expense Summary -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
 
-            <h2 class="mb-3">
-                @Model.Amount.ToString("0.00")
-            </h2>
+    <div class="row">
 
-            <p class="mb-1">
-                <strong>Split:</strong>
-                @Model.SplitType
-            </p>
+        <div class="col-lg-8">
 
-            <p class="mb-0">
-                <strong>Paid by:</strong>
-                @(Model.PaidBy?.FullName
-                    ?? Model.PaidBy?.UserName
-                    ?? "Unknown")
-            </p>
+            <div class="card mb-4">
 
-        </div>
-    </div>
+                <div class="card-body">
 
-    <!-- Shares -->
-    <div class="card shadow-sm">
-        <div class="card-header">
-            <h5 class="mb-0">Shares</h5>
-        </div>
+                    <p class="eyebrow">
+                        TOTAL
+                    </p>
 
-        <div class="list-group list-group-flush">
+                    <h2 style="font-size: 36px; margin-bottom: 20px;">
+                        @Model.Amount.ToString("0.00")
+                    </h2>
 
-            @foreach (var split in Model.Splits)
-            {
-                <div class="list-group-item d-flex justify-content-between">
+                    <div class="row">
 
-                    <span>
-                        @(split.User?.FullName
-                            ?? split.User?.UserName
-                            ?? "Unknown")
-                    </span>
+                        <div class="col-md-6 mb-3">
 
-                    <strong>
-                        @split.ShareAmount.ToString("0.00")
-                    </strong>
+                            <div class="text-muted small">
+                                Split type
+                            </div>
+
+                            <strong>
+                                @Model.SplitType
+                            </strong>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <div class="text-muted small">
+                                Paid by
+                            </div>
+
+                            <strong>
+                                @(Model.PaidBy?.FullName
+                                    ?? Model.PaidBy?.UserName
+                                    ?? "Unknown")
+                            </strong>
+
+                        </div>
+
+                    </div>
 
                 </div>
-            }
+
+            </div>
+
+
+            <div class="section-heading">
+                <h2>Shares</h2>
+            </div>
+
+            <div class="card">
+
+                <div class="list-group list-group-flush">
+
+                    @foreach (var split in Model.Splits)
+                    {
+                        <div class="list-group-item">
+
+                            <div class="d-flex
+                                        justify-content-between
+                                        align-items-center">
+
+                                <span>
+                                    @(split.User?.FullName
+                                        ?? split.User?.UserName
+                                        ?? "Unknown")
+                                </span>
+
+                                <strong>
+                                    @split.ShareAmount.ToString("0.00")
+                                </strong>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
 
         </div>
+
+
+        <div class="col-lg-4">
+
+            <div class="card">
+
+                <div class="card-body">
+
+                    <h5 class="card-title">
+                        Expense actions
+                    </h5>
+
+                    <a asp-action="Edit"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-outline-primary w-100 mb-2">
+                        Edit expense
+                    </a>
+
+                    <form asp-action="Delete"
+                          asp-route-id="@Model.Id"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="btn btn-outline-danger w-100"
+                                onclick="return confirm('Delete this expense? It will be soft-deleted.');">
+
+                            Delete expense
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
-
-    <!-- Delete -->
-    <form asp-action="Delete"
-          asp-route-id="@Model.Id"
-          method="post"
-          class="mt-3">
-
-        @Html.AntiForgeryToken()
-
-        <button type="submit"
-                class="btn btn-outline-danger"
-                onclick="return confirm('Delete this expense? It will be soft-deleted.');">
-            Delete Expense
-        </button>
-
-    </form>
 
 </div>

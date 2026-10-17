@@ -32,11 +32,14 @@ namespace Spleet.Services
                 .ToList();
 
             var result = new List<DebtSuggestionViewModel>();
+
             var memberNames = await _context.Users
                 .Where(u => balances.Keys.Contains(u.Id))
                 .ToDictionaryAsync(
                     u => u.Id,
-                    u => string.IsNullOrWhiteSpace(u.FullName) ? u.UserName ?? "User" : u.FullName);
+                    u => string.IsNullOrWhiteSpace(u.FullName)
+                        ? u.UserName ?? "User"
+                        : u.FullName);
 
             var i = 0;
             var j = 0;
@@ -44,7 +47,8 @@ namespace Spleet.Services
             while (i < debtors.Count && j < creditors.Count)
             {
                 var amount = decimal.Round(
-                    Math.Min(debtors[i].Amount, creditors[j].Amount), 2);
+                    Math.Min(debtors[i].Amount, creditors[j].Amount),
+                    2);
 
                 if (amount > 0)
                 {
@@ -52,8 +56,15 @@ namespace Spleet.Services
                     {
                         PayerUserId = debtors[i].UserId,
                         PayeeUserId = creditors[j].UserId,
-                        PayerName = memberNames.GetValueOrDefault(debtors[i].UserId, "User"),
-                        PayeeName = memberNames.GetValueOrDefault(creditors[j].UserId, "User"),
+
+                        PayerName = memberNames.GetValueOrDefault(
+                            debtors[i].UserId,
+                            "User"),
+
+                        PayeeName = memberNames.GetValueOrDefault(
+                            creditors[j].UserId,
+                            "User"),
+
                         Amount = amount
                     });
                 }
@@ -61,48 +72,77 @@ namespace Spleet.Services
                 debtors[i].Amount -= amount;
                 creditors[j].Amount -= amount;
 
-                if (debtors[i].Amount <= 0.005m) i++;
-                if (creditors[j].Amount <= 0.005m) j++;
+                if (debtors[i].Amount <= 0.005m)
+                    i++;
+
+                if (creditors[j].Amount <= 0.005m)
+                    j++;
             }
 
             return result;
         }
 
-        private async Task<Dictionary<Guid, decimal>> CalculateBalancesAsync(Guid groupId)
+        public Task<Dictionary<Guid, decimal>> GetBalancesAsync(Guid groupId)
+        {
+            return CalculateBalancesAsync(groupId);
+        }
+
+        private async Task<Dictionary<Guid, decimal>> CalculateBalancesAsync(
+            Guid groupId)
         {
             var balances = await _context.GroupMembers
-                .Where(m => m.GroupId == groupId && m.IsActive)
+                .Where(m =>
+                    m.GroupId == groupId &&
+                    m.IsActive)
                 .Select(m => m.UserId)
-                .ToDictionaryAsync(id => id, _ => 0m);
+                .ToDictionaryAsync(
+                    id => id,
+                    _ => 0m);
 
             var expenses = await _context.Expenses
                 .Include(e => e.Splits)
-                .Where(e => e.GroupId == groupId && !e.IsDeleted)
+                .Where(e =>
+                    e.GroupId == groupId &&
+                    !e.IsDeleted)
                 .ToListAsync();
 
             foreach (var expense in expenses)
             {
+                // The person who paid gets credited.
                 if (balances.ContainsKey(expense.PaidByUserId))
+                {
                     balances[expense.PaidByUserId] += expense.Amount;
+                }
 
+                // Every participant gets charged their share.
                 foreach (var split in expense.Splits)
                 {
                     if (balances.ContainsKey(split.UserId))
+                    {
                         balances[split.UserId] -= split.ShareAmount;
+                    }
                 }
             }
 
             var settlements = await _context.Settlements
-                .Where(s => s.GroupId == groupId && s.Status == SettlementStatus.Completed)
+                .Where(s =>
+                    s.GroupId == groupId &&
+                    s.Status == SettlementStatus.Completed)
                 .ToListAsync();
 
             foreach (var settlement in settlements)
             {
+                // Payer has paid money, so their balance decreases.
                 if (balances.ContainsKey(settlement.PayerUserId))
+                {
                     balances[settlement.PayerUserId] -= settlement.Amount;
+                }
 
+                // Payee received money, so their balance increases.
                 if (balances.ContainsKey(settlement.PayeeUserId))
+                {
                     balances[settlement.PayeeUserId] += settlement.Amount;
+                }
             }
 
             return balances;
@@ -117,6 +157,7 @@ namespace Spleet.Services
             }
 
             public Guid UserId { get; }
+
             public decimal Amount { get; set; }
         }
     }

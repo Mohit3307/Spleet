@@ -1,39 +1,143 @@
 @using Spleet.Models
-@model List<Expense>
+@model IEnumerable<Expense>
+
 @{
-    var group = (Group)ViewBag.Group;
-    ViewData["Title"] = "Expenses - " + group.Name;
+    ViewData["Title"] = "Expenses";
+    var groupId = ViewBag.GroupId;
 }
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+
+<div class="container">
+
+    <div class="dashboard-hero">
+
         <div>
+            <p class="eyebrow">EXPENSES</p>
             <h1>Expenses</h1>
-            <p class="text-muted mb-0">@group.Name</p>
+
+            <p class="page-subtitle">
+                Track everything your group has paid for.
+            </p>
         </div>
-        <div>
-            <a asp-controller="Groups" asp-action="Details" asp-route-id="@group.Id" class="btn btn-outline-secondary">Group</a>
-            <a asp-action="Create" asp-route-groupId="@group.Id" class="btn btn-primary">+ Add Expense</a>
-        </div>
+
+        <a asp-action="Create"
+           asp-route-groupId="@groupId"
+           class="primary-button">
+
+            + Add expense
+
+        </a>
+
     </div>
 
-    @if (!Model.Any())
-    {
-        <div class="alert alert-info">No expenses have been added yet.</div>
-    }
-    else
-    {
-        <div class="list-group shadow-sm">
-            @foreach (var expense in Model)
-            {
-                <a asp-action="Details" asp-route-id="@expense.Id"
-                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>@expense.Description</strong>
-                        <div class="small text-muted">@expense.Category · @expense.ExpenseDate.ToLocalTime().ToString("dd MMM yyyy")</div>
-                    </div>
-                    <strong>@group.CurrencyCode @expense.Amount.ToString("0.00")</strong>
-                </a>
-            }
+
+    <div class="section-block">
+
+        <div class="section-heading">
+
+            <h2>All expenses</h2>
+
+            <a asp-controller="Groups"
+               asp-action="Details"
+               asp-route-id="@groupId"
+               class="text-link">
+                Back to group
+            </a>
+
         </div>
-    }
+
+
+        @if (!Model.Any())
+        {
+            <div class="empty-card">
+
+                <div class="empty-icon">
+                    ₹
+                </div>
+
+                <h3>No expenses yet</h3>
+
+                <p>
+                    Add an expense to start tracking who paid
+                    and who owes what.
+                </p>
+
+                <a asp-action="Create"
+                   asp-route-groupId="@groupId"
+                   class="primary-button">
+                    Add expense
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div class="card">
+
+                <div class="list-group list-group-flush">
+
+                    @foreach (var expense in Model)
+                    {
+                        <a asp-action="Details"
+                           asp-route-id="@expense.Id"
+                           class="list-group-item
+                                  list-group-item-action">
+
+                            <div class="d-flex
+                                        justify-content-between
+                                        align-items-center">
+
+                                <div>
+
+                                    <strong>
+                                        @expense.Description
+                                    </strong>
+
+                                    <div class="text-muted small">
+
+                                        Paid by
+                                        @(expense.PaidBy?.FullName
+                                            ?? expense.PaidBy?.UserName
+                                            ?? "Unknown")
+
+                                        ·
+
+                                        @(expense.ExpenseDate
+                                            .ToLocalTime()
+                                            .ToString("dd MMM yyyy"))
+
+                                    </div>
+
+                                </div>
+
+                                <div class="text-end">
+
+                                    <strong>
+                                        @expense.Amount.ToString("0.00")
+                                    </strong>
+
+                                    <div>
+                                        <span class="badge
+                                            bg-light
+                                            text-dark
+                                            border">
+
+                                            @expense.Category
+
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </a>
+                    }
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
 </div>

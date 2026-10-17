@@ -5,5 +5,7 @@ namespace Spleet.Services.Interfaces
     public interface IDebtSimplificationService
     {
         Task<List<DebtSuggestionViewModel>> GetSuggestionsAsync(Guid groupId);
+
+        Task<Dictionary<Guid, decimal>> GetBalancesAsync(Guid groupId);
     }
 }

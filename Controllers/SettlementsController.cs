@@ -51,7 +51,9 @@ namespace Spleet.Controllers
 
             await _settlementService.AutoConfirmOverdueAsync();
             settlement = await _settlementService.GetAsync(id);
+            if (settlement == null) return NotFound();
 
+            ViewBag.CurrentUserId = user.Id;
             return View(settlement);
         }
 
@@ -101,7 +103,7 @@ namespace Spleet.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid();
+                return RedirectToPage("/Account/AccessDenied", new { area = "Identity" });
             }
             catch (InvalidOperationException ex)
             {
@@ -124,7 +126,7 @@ namespace Spleet.Controllers
             }
             catch (UnauthorizedAccessException)
             {
-                return Forbid();
+                return RedirectToPage("/Account/AccessDenied", new { area = "Identity" });
             }
             catch (InvalidOperationException ex)
             {

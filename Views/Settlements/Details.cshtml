@@ -6,6 +6,9 @@
 
     var payerName = Model.Payer?.FullName ?? Model.Payer?.UserName ?? "User";
     var payeeName = Model.Payee?.FullName ?? Model.Payee?.UserName ?? "User";
+    Guid? currentUserId = ViewBag.CurrentUserId;
+    bool isPayee = currentUserId.HasValue && currentUserId.Value == Model.PayeeUserId;
+    bool isPayer = currentUserId.HasValue && currentUserId.Value == Model.PayerUserId;
 
     var statusClass = Model.Status switch
     {
@@ -93,32 +96,52 @@
 
         @if (Model.Status == SettlementStatus.Pending)
         {
-            <section class="settlement-action-card">
-                <div>
-                    <span class="settlement-label">Action required</span>
-                    <h2>Review this payment</h2>
-                    <p>
-                        Confirm the payment if you received it. If something is wrong,
-                        you can dispute it instead.
-                    </p>
-                </div>
-
-                <div class="settlement-actions">
-                    <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
-                        @Html.AntiForgeryToken()
-                        <button class="btn btn-success" type="submit">
-                            Confirm Payment
-                        </button>
-                    </form>
-
-                    <form asp-action="Dispute" asp-route-id="@Model.Id" method="post">
-                        @Html.AntiForgeryToken()
-                        <button class="btn btn-outline-danger" type="submit">
-                            Dispute Payment
-                        </button>
-                    </form>
-                </div>
-            </section>
+            if (isPayee)
+            {
+                <section class="settlement-action-card">
+                    <div>
+                        <span class="settlement-label">Action required</span>
+                        <h2>Review this payment</h2>
+                        <p>
+                            @payerName marked this payment as paid. Confirm it if you received
+                            the money, or dispute it if something is wrong.
+                        </p>
+                    </div>
+                    <div class="settlement-actions">
+                        <form asp-action="Confirm" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-success" type="submit">Confirm Payment</button>
+                        </form>
+                        <form asp-action="Dispute" asp-route-id="@Model.Id" method="post">
+                            @Html.AntiForgeryToken()
+                            <button class="btn btn-outline-danger" type="submit">Dispute Payment</button>
+                        </form>
+                    </div>
+                </section>
+            }
+            else if (isPayer)
+            {
+                <section class="settlement-action-card">
+                    <span class="settlement-label">Payment submitted</span>
+                    <h2>Waiting for @payeeName</h2>
+                    <p>You marked this payment as paid. The recipient must confirm that it was received.</p>
+                    @if (Model.AutoConfirmDeadline.HasValue)
+                    {
+                        <div class="settlement-note">
+                            <span>Auto-confirm</span>
+                            <p>If it is not disputed, this payment is scheduled to auto-confirm on @Model.AutoConfirmDeadline.Value.ToLocalTime().ToString("dd MMM yyyy, HH:mm").</p>
+                        </div>
+                    }
+                </section>
+            }
+            else
+            {
+                <section class="settlement-action-card">
+                    <span class="settlement-label">Payment pending</span>
+                    <h2>Settlement in progress</h2>
+                    <p>This payment is waiting for confirmation from the recipient.</p>
+                </section>
+            }
         }
         else
         {

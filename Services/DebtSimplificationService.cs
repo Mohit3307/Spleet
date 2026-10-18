@@ -16,6 +16,12 @@ namespace Spleet.Services
             _context = context;
         }
 
+        public async Task<Dictionary<Guid, decimal>> GetBalancesAsync(
+            Guid groupId)
+        {
+            return await CalculateBalancesAsync(groupId);
+        }
+
         public async Task<List<DebtSuggestionViewModel>> GetSuggestionsAsync(
             Guid groupId)
         {
@@ -35,6 +41,9 @@ namespace Spleet.Services
 
             var result = new List<DebtSuggestionViewModel>();
 
+            if (balances.Count == 0)
+                return result;
+
             var memberNames = await _context.Users
                 .Where(u => balances.Keys.Contains(u.Id))
                 .ToDictionaryAsync(
@@ -50,91 +59,73 @@ namespace Spleet.Services
             {
                 var amount = decimal.Round(
                     Math.Min(debtors[i].Amount, creditors[j].Amount),
-                    2);
+                    2,
+                    MidpointRounding.AwayFromZero);
 
-                if (amount > 0)
+                if (amount <= 0m)
+                    break;
+
+                result.Add(new DebtSuggestionViewModel
                 {
-                    result.Add(new DebtSuggestionViewModel
-                    {
-                        PayerUserId = debtors[i].UserId,
-                        PayeeUserId = creditors[j].UserId,
+                    PayerUserId = debtors[i].UserId,
+                    PayeeUserId = creditors[j].UserId,
 
-                        PayerName = memberNames.GetValueOrDefault(
-                            debtors[i].UserId,
-                            "User"),
+                    PayerName = memberNames.GetValueOrDefault(
+                        debtors[i].UserId,
+                        "User"),
 
-                        PayeeName = memberNames.GetValueOrDefault(
-                            creditors[j].UserId,
-                            "User"),
+                    PayeeName = memberNames.GetValueOrDefault(
+                        creditors[j].UserId,
+                        "User"),
 
-                        Amount = amount
-                    });
-                }
+                    Amount = amount
+                });
 
                 debtors[i].Amount -= amount;
                 creditors[j].Amount -= amount;
 
                 if (debtors[i].Amount <= 0.005m)
-                {
                     i++;
-                }
 
                 if (creditors[j].Amount <= 0.005m)
-                {
                     j++;
-                }
             }
 
             return result;
         }
 
-        public Task<Dictionary<Guid, decimal>> GetBalancesAsync(Guid groupId)
-        {
-            return CalculateBalancesAsync(groupId);
-        }
-
         private async Task<Dictionary<Guid, decimal>> CalculateBalancesAsync(
             Guid groupId)
         {
+            // Only active group members participate in the current balance.
             var balances = await _context.GroupMembers
                 .Where(m =>
                     m.GroupId == groupId &&
                     m.IsActive)
                 .Select(m => m.UserId)
                 .ToDictionaryAsync(
-                    id => id,
+                    userId => userId,
                     _ => 0m);
 
+            if (balances.Count == 0)
+                return balances;
+
+            // Ignore soft-deleted expenses.
             var expenses = await _context.Expenses
                 .Include(e => e.Splits)
+                .Include(e => e.Contributions)
                 .Where(e =>
                     e.GroupId == groupId &&
                     !e.IsDeleted)
                 .ToListAsync();
 
-            var expenseIds = expenses
-                .Select(e => e.Id)
-                .ToList();
-
-            var contributions = await _context.ExpenseContributions
-                .Where(c => expenseIds.Contains(c.ExpenseId))
-                .ToListAsync();
-
-            var contributionsByExpense = contributions
-                .GroupBy(c => c.ExpenseId)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.ToList());
-
             foreach (var expense in expenses)
             {
-                // Credit actual contributions for expenses that have them.
-                if (contributionsByExpense.TryGetValue(
-                    expense.Id,
-                    out var expenseContributions)
-                    && expenseContributions.Count > 0)
+                // Credit the people who actually contributed money.
+                if (expense.Contributions != null &&
+                    expense.Contributions.Any())
                 {
-                    foreach (var contribution in expenseContributions)
+                    foreach (var contribution in expense.Contributions)
                     {
                         if (balances.ContainsKey(contribution.UserId))
                         {
@@ -145,15 +136,15 @@ namespace Spleet.Services
                 }
                 else
                 {
-                    // Backward compatibility for older expenses that do not
-                    // have contribution records.
+                    // Legacy expense: use its recorded payer.
                     if (balances.ContainsKey(expense.PaidByUserId))
                     {
-                        balances[expense.PaidByUserId] += expense.Amount;
+                        balances[expense.PaidByUserId] +=
+                            expense.Amount;
                     }
                 }
 
-                // Deduct each member's share of the expense.
+                // Charge each member their assigned share.
                 foreach (var split in expense.Splits)
                 {
                     if (balances.ContainsKey(split.UserId))
@@ -162,25 +153,43 @@ namespace Spleet.Services
                     }
                 }
             }
-            // Apply completed settlements.
-            // A payment reduces the payer's debt and the payee's credit.
-            var settlements = await _context.Settlements
+
+            // Only completed payments affect balances.
+            // Pending payments have not been confirmed.
+            // Disputed payments must not reduce the debt.
+            var completedSettlements = await _context.Settlements
                 .Where(s =>
                     s.GroupId == groupId &&
                     s.Status == SettlementStatus.Completed)
                 .ToListAsync();
 
-            foreach (var settlement in settlements)
+            foreach (var settlement in completedSettlements)
             {
+                // Paying reduces the payer's debt.
                 if (balances.ContainsKey(settlement.PayerUserId))
                 {
-                    balances[settlement.PayerUserId] += settlement.Amount;
+                    balances[settlement.PayerUserId] +=
+                        settlement.Amount;
                 }
 
+                // Receiving payment reduces the payee's credit.
                 if (balances.ContainsKey(settlement.PayeeUserId))
                 {
-                    balances[settlement.PayeeUserId] -= settlement.Amount;
+                    balances[settlement.PayeeUserId] -=
+                        settlement.Amount;
                 }
+            }
+
+            // Normalize insignificant floating/rounding residue.
+            foreach (var userId in balances.Keys.ToList())
+            {
+                if (Math.Abs(balances[userId]) < 0.005m)
+                    balances[userId] = 0m;
+                else
+                    balances[userId] = decimal.Round(
+                        balances[userId],
+                        2,
+                        MidpointRounding.AwayFromZero);
             }
 
             return balances;

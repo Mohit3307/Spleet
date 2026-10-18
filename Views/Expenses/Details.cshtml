@@ -1,145 +1,208 @@
+
 @using Spleet.Models
 @model Expense
 
 @{
     ViewData["Title"] = Model.Description;
+
+    var sharesTotal = Model.Splits.Sum(s => s.ShareAmount);
+    var contributions = Model.Contributions
+        .OrderByDescending(c => c.Amount)
+        .ToList();
+    var contributionsTotal = contributions.Sum(c => c.Amount);
 }
 
-<div class="container">
+<div class="container py-4">
 
-    <div class="dashboard-hero">
-
+    <div class="dashboard-hero d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <p class="eyebrow">EXPENSE</p>
-
+            <p class="eyebrow">EXPENSE DETAILS</p>
             <h1>@Model.Description</h1>
-
             <p class="page-subtitle">
                 @Model.Category
                 ·
-                @(Model.ExpenseDate.ToLocalTime().ToString("dd MMM yyyy"))
+                @Model.ExpenseDate.ToLocalTime().ToString("dd MMM yyyy")
             </p>
         </div>
 
         <div class="d-flex gap-2">
-
-            <a asp-controller="Expenses"
-               asp-action="Edit"
+            <a asp-action="Edit"
                asp-route-id="@Model.Id"
                class="btn btn-outline-primary">
                 Edit
             </a>
 
-            <a asp-controller="Groups"
-               asp-action="Details"
-               asp-route-id="@Model.GroupId"
+            <a asp-controller="Expenses"
+               asp-action="Index"
+               asp-route-groupId="@Model.GroupId"
                class="btn btn-outline-secondary">
-                Back to Group
+                Back to expenses
             </a>
-
         </div>
-
     </div>
 
-    <div class="row">
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-muted small">Expense total</div>
+                    <h2 class="mb-0">@Model.Amount.ToString("N2")</h2>
+                </div>
 
-        <div class="col-lg-8">
+                <div class="col-md-4">
+                    <div class="text-muted small">Split type</div>
+                    <strong>@Model.SplitType</strong>
+                </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-
-                    <p class="eyebrow">TOTAL</p>
-
-                    <h2 style="font-size: 36px; margin-bottom: 20px;">
-                        @Model.Amount.ToString("0.00")
-                    </h2>
-
-                    <div class="row">
-
-                        <div class="col-md-6 mb-3">
-                            <div class="text-muted small">Split type</div>
-                            <strong>@Model.SplitType</strong>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <div class="text-muted small">Paid by</div>
-                            <strong>
-                                @(Model.PaidBy?.FullName
-                                    ?? Model.PaidBy?.UserName
-                                    ?? "Unknown")
-                            </strong>
-                        </div>
-
-                    </div>
-
+                <div class="col-md-4">
+                    <div class="text-muted small">Recorded payer</div>
+                    <strong>
+                        @(Model.PaidBy?.FullName
+                            ?? Model.PaidBy?.UserName
+                            ?? "Unknown")
+                    </strong>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="section-heading">
-                <h2>Shares</h2>
-            </div>
+    <div class="section-heading d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Expense shares</h2>
+        <span class="text-muted small">
+            Total: @sharesTotal.ToString("N2")
+        </span>
+    </div>
 
-            <div class="card">
-                <div class="list-group list-group-flush">
-
-                    @foreach (var split in Model.Splits)
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th class="text-end">Share amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Splits.Any())
                     {
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-
-                                <span>
+                        @foreach (var split in Model.Splits.OrderBy(s =>
+                            s.User?.FullName ?? s.User?.UserName))
+                        {
+                            <tr>
+                                <td>
                                     @(split.User?.FullName
                                         ?? split.User?.UserName
                                         ?? "Unknown")
-                                </span>
-
-                                <strong>
-                                    @split.ShareAmount.ToString("0.00")
-                                </strong>
-
-                            </div>
-                        </div>
+                                </td>
+                                <td class="text-end fw-semibold">
+                                    @split.ShareAmount.ToString("N2")
+                                </td>
+                            </tr>
+                        }
                     }
-
-                </div>
-            </div>
-
+                    else
+                    {
+                        <tr>
+                            <td colspan="2" class="text-muted text-center py-4">
+                                No shares recorded.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Total shares</th>
+                        <th class="text-end">@sharesTotal.ToString("N2")</th>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
+    </div>
 
-        <div class="col-lg-4">
+    <div class="section-heading d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Actual contributions</h2>
+        <span class="text-muted small">
+            Total: @contributionsTotal.ToString("N2")
+        </span>
+    </div>
 
-            <div class="card">
-                <div class="card-body">
+    <div class="card mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Contributor</th>
+                        <th class="text-end">Amount paid</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (contributions.Any())
+                    {
+                        @foreach (var contribution in contributions)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">
+                                        @(contribution.User?.FullName
+                                            ?? contribution.User?.UserName
+                                            ?? "Unknown")
+                                    </div>
 
-                    <h5 class="card-title">Expense actions</h5>
-
-                    <a asp-controller="Expenses"
-                       asp-action="Edit"
-                       asp-route-id="@Model.Id"
-                       class="btn btn-outline-primary w-100 mb-2">
-                        Edit expense
-                    </a>
-
-                    <form asp-controller="Expenses"
-                          asp-action="Delete"
-                          asp-route-id="@Model.Id"
-                          method="post">
-
-                        @Html.AntiForgeryToken()
-
-                        <button type="submit"
-                                class="btn btn-outline-danger w-100"
-                                onclick="return confirm('Delete this expense? It will be soft-deleted.');">
-                            Delete expense
-                        </button>
-
-                    </form>
-
-                </div>
-            </div>
-
+                                    @if (!string.IsNullOrWhiteSpace(contribution.Note))
+                                    {
+                                        <div class="text-muted small">
+                                            @contribution.Note
+                                        </div>
+                                    }
+                                </td>
+                                <td class="text-end fw-semibold">
+                                    @contribution.Amount.ToString("N2")
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="2" class="text-muted text-center py-4">
+                                No contribution records found for this expense.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Total contributions</th>
+                        <th class="text-end">@contributionsTotal.ToString("N2")</th>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
+    </div>
 
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Expense actions</h5>
+
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="Edit"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-outline-primary">
+                    Edit expense
+                </a>
+
+                <form asp-action="Delete"
+                      asp-route-id="@Model.Id"
+                      method="post"
+                      onsubmit="return confirm('Delete this expense? It will be soft-deleted.');">
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-outline-danger">
+                        Delete expense
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 
 </div>

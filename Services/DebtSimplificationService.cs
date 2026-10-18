@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using Spleet.Data;
 using Spleet.Models;
@@ -15,7 +16,8 @@ namespace Spleet.Services
             _context = context;
         }
 
-        public async Task<List<DebtSuggestionViewModel>> GetSuggestionsAsync(Guid groupId)
+        public async Task<List<DebtSuggestionViewModel>> GetSuggestionsAsync(
+            Guid groupId)
         {
             var balances = await CalculateBalancesAsync(groupId);
 
@@ -73,10 +75,14 @@ namespace Spleet.Services
                 creditors[j].Amount -= amount;
 
                 if (debtors[i].Amount <= 0.005m)
+                {
                     i++;
+                }
 
                 if (creditors[j].Amount <= 0.005m)
+                {
                     j++;
+                }
             }
 
             return result;
@@ -106,15 +112,48 @@ namespace Spleet.Services
                     !e.IsDeleted)
                 .ToListAsync();
 
+            var expenseIds = expenses
+                .Select(e => e.Id)
+                .ToList();
+
+            var contributions = await _context.ExpenseContributions
+                .Where(c => expenseIds.Contains(c.ExpenseId))
+                .ToListAsync();
+
+            var contributionsByExpense = contributions
+                .GroupBy(c => c.ExpenseId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList());
+
             foreach (var expense in expenses)
             {
-                // The person who paid gets credited.
-                if (balances.ContainsKey(expense.PaidByUserId))
+                // Credit actual contributions for expenses that have them.
+                if (contributionsByExpense.TryGetValue(
+                    expense.Id,
+                    out var expenseContributions)
+                    && expenseContributions.Count > 0)
                 {
-                    balances[expense.PaidByUserId] += expense.Amount;
+                    foreach (var contribution in expenseContributions)
+                    {
+                        if (balances.ContainsKey(contribution.UserId))
+                        {
+                            balances[contribution.UserId] +=
+                                contribution.Amount;
+                        }
+                    }
+                }
+                else
+                {
+                    // Backward compatibility for older expenses that do not
+                    // have contribution records.
+                    if (balances.ContainsKey(expense.PaidByUserId))
+                    {
+                        balances[expense.PaidByUserId] += expense.Amount;
+                    }
                 }
 
-                // Every participant gets charged their share.
+                // Deduct each member's share of the expense.
                 foreach (var split in expense.Splits)
                 {
                     if (balances.ContainsKey(split.UserId))
@@ -123,7 +162,8 @@ namespace Spleet.Services
                     }
                 }
             }
-
+            // Apply completed settlements.
+            // A payment reduces the payer's debt and the payee's credit.
             var settlements = await _context.Settlements
                 .Where(s =>
                     s.GroupId == groupId &&
@@ -132,16 +172,14 @@ namespace Spleet.Services
 
             foreach (var settlement in settlements)
             {
-                // Payer has paid money, so their balance decreases.
                 if (balances.ContainsKey(settlement.PayerUserId))
                 {
-                    balances[settlement.PayerUserId] -= settlement.Amount;
+                    balances[settlement.PayerUserId] += settlement.Amount;
                 }
 
-                // Payee received money, so their balance increases.
                 if (balances.ContainsKey(settlement.PayeeUserId))
                 {
-                    balances[settlement.PayeeUserId] += settlement.Amount;
+                    balances[settlement.PayeeUserId] -= settlement.Amount;
                 }
             }
 

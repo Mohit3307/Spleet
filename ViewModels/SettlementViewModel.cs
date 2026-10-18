@@ -1,3 +1,4 @@
+
 using Spleet.Models;
 
 namespace Spleet.ViewModels
@@ -6,8 +7,10 @@ namespace Spleet.ViewModels
     {
         public Guid PayerUserId { get; set; }
         public Guid PayeeUserId { get; set; }
+
         public string PayerName { get; set; } = "";
         public string PayeeName { get; set; } = "";
+
         public decimal Amount { get; set; }
     }
 
@@ -15,7 +18,13 @@ namespace Spleet.ViewModels
     {
         public Guid GroupId { get; set; }
         public Guid CurrentUserId { get; set; }
+
         public List<DebtSuggestionViewModel> Suggestions { get; set; } = new();
+
+        // Payments awaiting confirmation or dispute resolution.
         public List<Settlement> PendingSettlements { get; set; } = new();
+
+        // Completed and disputed payments for the settlement history.
+        public List<Settlement> SettlementHistory { get; set; } = new();
     }
 }

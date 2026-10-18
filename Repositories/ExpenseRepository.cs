@@ -1,7 +1,8 @@
+
 using Microsoft.EntityFrameworkCore;
+using Spleet.Data;
 using Spleet.Models;
 using Spleet.Repositories.Interfaces;
-using Spleet.Data;
 
 namespace Spleet.Repositories
 {
@@ -15,10 +16,14 @@ namespace Spleet.Repositories
         public async Task<IEnumerable<Expense>> GetForGroup(Guid groupId)
         {
             return await _context.Expenses
+                .Include(e => e.PaidBy)
+                .Include(e => e.Splits)
+                .Include(e => e.Contributions)
                 .Where(e =>
                     e.GroupId == groupId &&
                     !e.IsDeleted)
                 .OrderByDescending(e => e.ExpenseDate)
+                .ThenByDescending(e => e.CreatedAt)
                 .ToListAsync();
         }
 
@@ -42,6 +47,8 @@ namespace Spleet.Repositories
             return await _context.Expenses
                 .Include(e => e.Splits)
                     .ThenInclude(s => s.User)
+                .Include(e => e.Contributions)
+                    .ThenInclude(c => c.User)
                 .Include(e => e.PaidBy)
                 .FirstOrDefaultAsync(e => e.Id == expenseId);
         }

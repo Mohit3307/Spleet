@@ -1,3 +1,4 @@
+
 using System.ComponentModel.DataAnnotations;
 using Spleet.Models;
 
@@ -27,6 +28,9 @@ namespace Spleet.ViewModels
 
         public Dictionary<Guid, decimal> CustomShares { get; set; } = new();
 
+        // Actual amounts paid by each member, separate from their shares.
+        public Dictionary<Guid, decimal> Contributions { get; set; } = new();
+
         public List<MemberOptionViewModel> Members { get; set; } = new();
     }
 
@@ -38,7 +42,9 @@ namespace Spleet.ViewModels
     public class MemberOptionViewModel
     {
         public Guid UserId { get; set; }
+
         public string Name { get; set; } = "";
+
         public string Email { get; set; } = "";
     }
 }

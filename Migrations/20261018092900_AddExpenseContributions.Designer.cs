@@ -12,7 +12,7 @@ using Spleet.Data;
 namespace Spleet.Migrations
 {
     [DbContext(typeof(SpleetDbContext))]
-    [Migration("20261018084359_AddExpenseContributions")]
+    [Migration("20261018092900_AddExpenseContributions")]
     partial class AddExpenseContributions
     {
         /// <inheritdoc />

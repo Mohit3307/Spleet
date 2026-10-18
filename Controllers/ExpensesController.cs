@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -59,16 +60,12 @@ namespace Spleet.Controllers
 
             if (!ModelState.IsValid)
             {
-                var data = await _expenseService.GetCreateDataAsync(model.GroupId, user.Id);
+                var data = await _expenseService.GetCreateDataAsync(
+                    model.GroupId, user.Id);
+
                 if (data == null) return Forbid();
-                data.Description = model.Description;
-                data.Amount = model.Amount;
-                data.Category = model.Category;
-                data.PaidByUserId = model.PaidByUserId;
-                data.SplitType = model.SplitType;
-                data.ExpenseDate = model.ExpenseDate;
-                data.SelectedUserIds = model.SelectedUserIds ?? new List<Guid>();
-                data.CustomShares = model.CustomShares ?? new Dictionary<Guid, decimal>();
+
+                CopyCreateValues(data, model);
                 return View(data);
             }
 
@@ -80,16 +77,13 @@ namespace Spleet.Controllers
             catch (ArgumentException ex)
             {
                 ModelState.AddModelError("", ex.Message);
-                var data = await _expenseService.GetCreateDataAsync(model.GroupId, user.Id);
+
+                var data = await _expenseService.GetCreateDataAsync(
+                    model.GroupId, user.Id);
+
                 if (data == null) return Forbid();
-                data.Description = model.Description;
-                data.Amount = model.Amount;
-                data.Category = model.Category;
-                data.PaidByUserId = model.PaidByUserId;
-                data.SplitType = model.SplitType;
-                data.ExpenseDate = model.ExpenseDate;
-                data.SelectedUserIds = model.SelectedUserIds ?? new List<Guid>();
-                data.CustomShares = model.CustomShares ?? new Dictionary<Guid, decimal>();
+
+                CopyCreateValues(data, model);
                 return View(data);
             }
         }
@@ -131,6 +125,7 @@ namespace Spleet.Controllers
             {
                 var data = await _expenseService.GetEditDataAsync(model.Id, user.Id);
                 if (data == null) return NotFound();
+
                 CopyEditValues(data, model);
                 return View(data);
             }
@@ -143,8 +138,10 @@ namespace Spleet.Controllers
             catch (ArgumentException ex)
             {
                 ModelState.AddModelError("", ex.Message);
+
                 var data = await _expenseService.GetEditDataAsync(model.Id, user.Id);
                 if (data == null) return NotFound();
+
                 CopyEditValues(data, model);
                 return View(data);
             }
@@ -167,7 +164,9 @@ namespace Spleet.Controllers
             return RedirectToAction(nameof(Index), new { groupId });
         }
 
-        private static void CopyEditValues(ExpenseEditViewModel target, ExpenseEditViewModel source)
+        private static void CopyCreateValues(
+            ExpenseCreateViewModel target,
+            ExpenseCreateViewModel source)
         {
             target.Description = source.Description;
             target.Amount = source.Amount;
@@ -177,6 +176,22 @@ namespace Spleet.Controllers
             target.ExpenseDate = source.ExpenseDate;
             target.SelectedUserIds = source.SelectedUserIds ?? new List<Guid>();
             target.CustomShares = source.CustomShares ?? new Dictionary<Guid, decimal>();
+            target.Contributions = source.Contributions ?? new Dictionary<Guid, decimal>();
+        }
+
+        private static void CopyEditValues(
+            ExpenseEditViewModel target,
+            ExpenseEditViewModel source)
+        {
+            target.Description = source.Description;
+            target.Amount = source.Amount;
+            target.Category = source.Category;
+            target.PaidByUserId = source.PaidByUserId;
+            target.SplitType = source.SplitType;
+            target.ExpenseDate = source.ExpenseDate;
+            target.SelectedUserIds = source.SelectedUserIds ?? new List<Guid>();
+            target.CustomShares = source.CustomShares ?? new Dictionary<Guid, decimal>();
+            target.Contributions = source.Contributions ?? new Dictionary<Guid, decimal>();
         }
     }
 }

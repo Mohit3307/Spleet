@@ -1,4 +1,6 @@
+
 @using Spleet.Models
+@using System.Globalization
 @model Spleet.ViewModels.ExpenseCreateViewModel
 
 @{
@@ -8,44 +10,34 @@
 <div class="container">
 
     <div class="dashboard-hero">
-
         <div>
             <p class="eyebrow">NEW EXPENSE</p>
             <h1>Add expense</h1>
-
             <p class="page-subtitle">
-                Record a shared expense and choose how it is split.
+                Record a shared expense, choose how it is split,
+                and record who actually paid.
             </p>
         </div>
-
     </div>
 
-
     <div class="row justify-content-center">
-
         <div class="col-lg-8">
 
             <div class="card">
-
                 <div class="card-body">
 
-                    <form asp-action="Create"
-                          method="post">
+                    <form asp-action="Create" method="post">
 
                         @Html.AntiForgeryToken()
 
-                        <input type="hidden"
-                               asp-for="GroupId" />
+                        <input type="hidden" asp-for="GroupId" />
 
                         <div asp-validation-summary="ModelOnly"
                              class="validation-summary mb-4">
                         </div>
 
-
                         <div class="mb-3">
-
-                            <label asp-for="Description"
-                                   class="form-label">
+                            <label asp-for="Description" class="form-label">
                                 Description
                             </label>
 
@@ -54,22 +46,18 @@
                                    placeholder="e.g. Dinner" />
 
                             <span asp-validation-for="Description"
-                                  class="field-error">
-                            </span>
-
+                                  class="field-error"></span>
                         </div>
-
 
                         <div class="row">
 
                             <div class="col-md-6 mb-3">
-
-                                <label asp-for="Amount"
-                                       class="form-label">
-                                    Amount
+                                <label asp-for="Amount" class="form-label">
+                                    Total expense amount
                                 </label>
 
                                 <input asp-for="Amount"
+                                       id="expenseAmount"
                                        class="form-control"
                                        type="number"
                                        step="0.01"
@@ -77,38 +65,31 @@
                                        placeholder="0.00" />
 
                                 <span asp-validation-for="Amount"
-                                      class="field-error">
-                                </span>
-
+                                      class="field-error"></span>
                             </div>
 
-
                             <div class="col-md-6 mb-3">
-
-                                <label asp-for="Category"
-                                       class="form-label">
+                                <label asp-for="Category" class="form-label">
                                     Category
                                 </label>
 
                                 <input asp-for="Category"
                                        class="form-control"
                                        placeholder="food" />
-
                             </div>
 
                         </div>
 
-
                         <div class="row">
 
                             <div class="col-md-6 mb-3">
-
                                 <label asp-for="PaidByUserId"
                                        class="form-label">
-                                    Paid by
+                                    Primary payer
                                 </label>
 
                                 <select asp-for="PaidByUserId"
+                                        id="paidByUserId"
                                         class="form-select">
 
                                     @foreach (var member in Model.Members)
@@ -120,11 +101,13 @@
 
                                 </select>
 
+                                <small class="text-muted">
+                                    This preserves the existing primary-payer
+                                    field. Actual contributions are entered below.
+                                </small>
                             </div>
 
-
                             <div class="col-md-6 mb-3">
-
                                 <label asp-for="ExpenseDate"
                                        class="form-label">
                                     Expense date
@@ -133,16 +116,12 @@
                                 <input asp-for="ExpenseDate"
                                        class="form-control"
                                        type="date" />
-
                             </div>
 
                         </div>
 
-
                         <div class="mb-4">
-
-                            <label asp-for="SplitType"
-                                   class="form-label">
+                            <label asp-for="SplitType" class="form-label">
                                 Split type
                             </label>
 
@@ -150,36 +129,23 @@
                                     class="form-select"
                                     id="splitType">
 
-                                <option value="@SplitType.Equal">
-                                    Equal
-                                </option>
-
-                                <option value="@SplitType.Custom">
-                                    Custom
-                                </option>
+                                <option value="@SplitType.Equal">Equal</option>
+                                <option value="@SplitType.Custom">Custom</option>
 
                             </select>
-
                         </div>
 
-
                         <div class="mb-4">
-
-                            <label class="form-label">
-                                Split between
-                            </label>
+                            <label class="form-label">Split between</label>
 
                             <div class="card">
-
                                 <div class="card-body">
 
                                     @foreach (var member in Model.Members)
                                     {
-                                        <div class="split-member
-                                                    custom-share-row">
+                                        <div class="split-member custom-share-row mb-3">
 
                                             <div class="form-check">
-
                                                 <input class="form-check-input"
                                                        type="checkbox"
                                                        name="SelectedUserIds"
@@ -192,36 +158,121 @@
                                                         @member.Email
                                                     </span>
                                                 </label>
-
                                             </div>
 
                                             <div class="custom-share mt-2"
                                                  data-user-id="@member.UserId">
+
+                                                @{
+                                                    var customShare = Model.CustomShares.TryGetValue(
+                                                        member.UserId, out var existingShare)
+                                                        ? existingShare
+                                                        : 0m;
+                                                }
 
                                                 <input type="number"
                                                        name="CustomShares[@member.UserId]"
                                                        class="form-control custom-share-input"
                                                        step="0.01"
                                                        min="0"
-                                                       placeholder="Share"
+                                                       value="@(customShare > 0 ? customShare.ToString("0.00", CultureInfo.InvariantCulture) : "")"
+                                                       placeholder="Custom share"
                                                        disabled />
-
                                             </div>
 
                                         </div>
                                     }
 
                                 </div>
-
                             </div>
 
+                            <small class="text-muted">
+                                Equal splits divide the expense evenly.
+                                Custom splits let you specify each selected
+                                member's share.
+                            </small>
                         </div>
 
+                        <hr />
+
+                        <div class="mb-4">
+                            <h4>Actual contributions</h4>
+
+                            <p class="text-muted">
+                                Enter how much each member actually paid
+                                toward this bill. These amounts are separate
+                                from the shares above.
+                            </p>
+
+                            <div class="card">
+                                <div class="card-body">
+
+                                    @foreach (var member in Model.Members)
+                                    {
+                                        var contributionAmount =
+                                            Model.Contributions.TryGetValue(
+                                                member.UserId,
+                                                out var existingContribution)
+                                                ? existingContribution
+                                                : 0m;
+
+                                        <div class="row align-items-center mb-3">
+
+                                            <div class="col-md-6">
+                                                <label class="form-label mb-1"
+                                                       for="contribution_@member.UserId">
+                                                    @member.Name
+                                                </label>
+
+                                                <div class="text-muted small">
+                                                    @member.Email
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <input type="number"
+                                                       id="contribution_@member.UserId"
+                                                       name="Contributions[@member.UserId]"
+                                                       class="form-control contribution-input"
+                                                       step="0.01"
+                                                       min="0"
+                                                       value="@contributionAmount.ToString("0.00", CultureInfo.InvariantCulture)"
+                                                       placeholder="0.00" />
+                                            </div>
+
+                                        </div>
+                                    }
+
+                                    <hr />
+
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total contributions</strong>
+                                        <strong id="contributionTotal">0.00</strong>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span>Expense amount</span>
+                                        <span id="contributionExpected">0.00</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <span>Difference</span>
+                                        <strong id="contributionDifference">0.00</strong>
+                                    </div>
+
+                                    <small id="contributionMessage"
+                                           class="text-muted d-block mt-2"
+                                           aria-live="polite">
+                                        Contributions should add up to the total expense.
+                                    </small>
+
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="d-flex gap-2">
 
-                            <button type="submit"
-                                    class="primary-button">
+                            <button type="submit" class="primary-button">
                                 Add expense
                             </button>
 
@@ -237,56 +288,84 @@
                     </form>
 
                 </div>
-
             </div>
 
         </div>
-
     </div>
 
 </div>
-
 
 @section Scripts {
 
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-
-        const splitType =
-            document.getElementById("splitType");
-
-        const customRows =
-            document.querySelectorAll(".custom-share");
+        const splitType = document.getElementById("splitType");
+        const customRows = document.querySelectorAll(".custom-share");
+        const expenseAmount = document.getElementById("expenseAmount");
+        const contributionInputs = document.querySelectorAll(".contribution-input");
 
         function updateCustomVisibility() {
-
-            const isCustom =
-                splitType.value === "Custom";
+            const isCustom = splitType.value === "Custom";
 
             customRows.forEach(row => {
+                const input = row.querySelector(".custom-share-input");
 
-                const input =
-                    row.querySelector(".custom-share-input");
-
-                if (!input)
-                    return;
+                if (!input) return;
 
                 input.disabled = !isCustom;
 
                 if (!isCustom) {
                     input.value = "";
                 }
-
             });
         }
 
-        splitType.addEventListener(
-            "change",
-            updateCustomVisibility
-        );
+        function updateContributionTotal() {
+            let total = 0;
+
+            contributionInputs.forEach(input => {
+                const value = Number.parseFloat(input.value);
+                if (Number.isFinite(value) && value > 0) {
+                    total += value;
+                }
+            });
+
+            const expected = Number.parseFloat(expenseAmount.value) || 0;
+            const difference = Math.round((total - expected) * 100) / 100;
+
+            document.getElementById("contributionTotal").textContent =
+                total.toFixed(2);
+
+            document.getElementById("contributionExpected").textContent =
+                expected.toFixed(2);
+
+            document.getElementById("contributionDifference").textContent =
+                difference.toFixed(2);
+
+            const message = document.getElementById("contributionMessage");
+
+            if (expected <= 0) {
+                message.textContent = "Enter the total expense amount.";
+            } else if (Math.abs(difference) < 0.005) {
+                message.textContent = "Contribution total matches the expense amount.";
+            } else if (difference < 0) {
+                message.textContent =
+                    "You still need to record " + Math.abs(difference).toFixed(2) + ".";
+            } else {
+                message.textContent =
+                    "Contributions exceed the expense by " + difference.toFixed(2) + ".";
+            }
+        }
+
+        splitType.addEventListener("change", updateCustomVisibility);
+        expenseAmount.addEventListener("input", updateContributionTotal);
+
+        contributionInputs.forEach(input => {
+            input.addEventListener("input", updateContributionTotal);
+        });
 
         updateCustomVisibility();
-
+        updateContributionTotal();
     </script>
 }

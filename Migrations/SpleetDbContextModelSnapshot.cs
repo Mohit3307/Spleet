@@ -237,6 +237,37 @@ namespace Spleet.Migrations
                     b.ToTable("Expenses");
                 });
 
+            modelBuilder.Entity("Spleet.Models.ExpenseContribution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<Guid>("ExpenseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpenseId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ExpenseContributions");
+                });
+
             modelBuilder.Entity("Spleet.Models.ExpenseSplit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -629,6 +660,25 @@ namespace Spleet.Migrations
                     b.Navigation("PaidBy");
                 });
 
+            modelBuilder.Entity("Spleet.Models.ExpenseContribution", b =>
+                {
+                    b.HasOne("Spleet.Models.Expense", "Expense")
+                        .WithMany("Contributions")
+                        .HasForeignKey("ExpenseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Spleet.Models.User", "User")
+                        .WithMany("ExpenseContributions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Expense");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Spleet.Models.ExpenseSplit", b =>
                 {
                     b.HasOne("Spleet.Models.Expense", "Expense")
@@ -718,6 +768,8 @@ namespace Spleet.Migrations
 
             modelBuilder.Entity("Spleet.Models.Expense", b =>
                 {
+                    b.Navigation("Contributions");
+
                     b.Navigation("Splits");
                 });
 
@@ -736,6 +788,8 @@ namespace Spleet.Migrations
 
             modelBuilder.Entity("Spleet.Models.User", b =>
                 {
+                    b.Navigation("ExpenseContributions");
+
                     b.Navigation("ExpenseSplits");
 
                     b.Navigation("ExpensesPaid");

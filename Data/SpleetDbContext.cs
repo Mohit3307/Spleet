@@ -22,7 +22,7 @@ namespace Spleet.Data
         public DbSet<GroupInvite> GroupInvites => Set<GroupInvite>();
         public DbSet<ActivityLogEntry> ActivityLogEntries => Set<ActivityLogEntry>();
         public DbSet<RecurringExpenseTemplate> RecurringExpenseTemplates => Set<RecurringExpenseTemplate>();
-
+        public DbSet<ExpenseContribution> ExpenseContributions => Set<ExpenseContribution>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Identity must configure its tables first.
@@ -69,6 +69,21 @@ namespace Spleet.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
 
+            modelBuilder.Entity<ExpenseContribution>()
+    .HasOne(c => c.Expense)
+    .WithMany(e => e.Contributions)
+    .HasForeignKey(c => c.ExpenseId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ExpenseContribution>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.ExpenseContributions)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ExpenseContribution>()
+                .Property(c => c.Amount)
+                .HasColumnType("decimal(12,2)");
 
             modelBuilder.Entity<ExpenseSplit>()
                 .HasOne(es => es.Expense)

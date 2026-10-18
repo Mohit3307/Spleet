@@ -136,8 +136,8 @@
                                     </div>
 
                                     <span class="badge @(member.Role == GroupRole.Admin
-                                        ? "bg-primary"
-                                        : "bg-secondary")">
+                                                                                ? "bg-primary"
+                                                                                : "bg-secondary")">
                                         @member.Role
                                     </span>
 
@@ -169,22 +169,39 @@
                             registered email address.
                         </p>
 
-                        <!--
-                            Member adding is not connected to a controller
-                            action yet, so this remains UI-only for now.
-                        -->
-                        <div class="input-group">
+                        @if (TempData["InviteMessage"] != null)
+                        {
+                            <div class="alert alert-info" role="alert">
+                                @TempData["InviteMessage"]
+                            </div>
+                        }
 
-                            <input type="email"
-                                   class="form-control"
-                                   placeholder="user@example.com" />
+                        @if (TempData["InviteError"] != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @TempData["InviteError"]
+                            </div>
+                        }
 
-                            <button type="button"
-                                    class="btn btn-primary">
-                                Add User
-                            </button>
+                        <form asp-controller="Invites"
+                              asp-action="AddByEmail"
+                              method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="groupId" value="@Model.Id" />
 
-                        </div>
+                            <div class="input-group">
+                                <input type="email"
+                                       name="email"
+                                       class="form-control"
+                                       placeholder="user@example.com"
+                                       autocomplete="email"
+                                       required />
+
+                                <button type="submit" class="btn btn-primary">
+                                    Add User
+                                </button>
+                            </div>
+                        </form>
 
                     </div>
 
@@ -260,8 +277,8 @@
                                                 ·
 
                                                 @expense.ExpenseDate
-                                                    .ToLocalTime()
-                                                    .ToString("dd MMM yyyy")
+                                                .ToLocalTime()
+                                                .ToString("dd MMM yyyy")
 
                                             </div>
 
@@ -340,7 +357,9 @@
 
 
                         <!-- INVITE -->
-                        <a href="#"
+                        <a asp-controller="Invites"
+                           asp-action="Create"
+                           asp-route-groupId="@Model.Id"
                            class="btn btn-outline-secondary">
                             Create invite link
                         </a>

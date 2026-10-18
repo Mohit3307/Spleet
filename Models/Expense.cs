@@ -37,6 +37,8 @@ namespace Spleet.Models
         public bool IsDeleted { get; set; } = false;
 
         public ICollection<ExpenseSplit> Splits { get; set; } = new List<ExpenseSplit>();
+        public ICollection<ExpenseContribution> Contributions { get; set; }
+    = new List<ExpenseContribution>();
     }
 
     public class ExpenseSplit

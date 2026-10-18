@@ -15,5 +15,8 @@ namespace Spleet.Models
         public ICollection<GroupMember> GroupMemberships { get; set; } = new List<GroupMember>();
         public ICollection<Expense> ExpensesPaid { get; set; } = new List<Expense>();
         public ICollection<ExpenseSplit> ExpenseSplits { get; set; } = new List<ExpenseSplit>();
+
+        public ICollection<ExpenseContribution> ExpenseContributions { get; set; }
+    = new List<ExpenseContribution>();
     }
 }
